@@ -6,10 +6,11 @@
 class Haystack_Individual : public Individual
 {
 	public:
-		Haystack_Individual(int max_length);
+		Haystack_Individual();
 		~Haystack_Individual();
+		void reset();
 		int calculateIndividualFitness();
-		void createOnEstimatedDistribution(double* p);
+		void printFitnessLandscape();
 
 		static bool solutionFound;
 };

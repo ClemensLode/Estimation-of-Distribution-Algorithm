@@ -2,14 +2,8 @@
 
 bool Haystack_Individual::solutionFound = false;
 
-void Haystack_Individual::createOnEstimatedDistribution(double* p)
-{
-	fitness = -1;
-	for(int i = 0; i < maxLength; i++)
-		bitstring[i] = rand() < RAND_MAX*p[i] ? 1 : 0;
-}
-Haystack_Individual::Haystack_Individual(int max_length):
-	Individual(max_length)
+Haystack_Individual::Haystack_Individual():
+	Individual()
 {
 	solutionFound = false;
 }
@@ -17,14 +11,15 @@ Haystack_Individual::Haystack_Individual(int max_length):
 Haystack_Individual::~Haystack_Individual()
 {}
 
+void Haystack_Individual::reset()
+{
+	solutionFound = false;
+}
 
 int Haystack_Individual::calculateIndividualFitness()
 {
-	return 0;
-	/*
-	// ?
-//	if(solutionFound)
-//		fitness = maxLength;
+	if(solutionFound)
+		fitness = maxLength;
 	if(fitness == -1)
 	{
 		fitness = maxLength;
@@ -34,11 +29,17 @@ int Haystack_Individual::calculateIndividualFitness()
 				fitness = 0;
 				break;
 			}
-//		if(fitness == maxLength)
-//			solutionFound = 1;
+		if(fitness == maxLength)
+			solutionFound = 1;
 	}
-	fitness = 0;
-	return(fitness);	*/
+	return(fitness);	
 }
 
-
+void Haystack_Individual::printFitnessLandscape()
+{
+	double* fitness_array = new double[101];
+	for(int i = 0; i <= 100; i++)
+		fitness_array[i] = 0.0;
+	fitness_array[71] = 1.0;
+	printIndividualFitnessLandscape("haystack", "Needle in a Haystack landscape", "Search space", fitness_array, 100);
+}

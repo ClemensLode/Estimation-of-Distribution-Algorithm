@@ -1,18 +1,13 @@
 #include "onemax2_individual.hpp"
 
-void OneMax2_Individual::createOnEstimatedDistribution(double* p)
-{
-	fitness = -1;
-	for(int i = 0; i < maxLength; i++)
-		bitstring[i] = rand()%100 < 100.0*p[i] ? 1 : 0;
-}
-
-OneMax2_Individual::OneMax2_Individual(int max_length):
-	Individual(max_length)
-{
-}
+OneMax2_Individual::OneMax2_Individual():
+	Individual()
+{}
 
 OneMax2_Individual::~OneMax2_Individual()
+{}
+
+void OneMax2_Individual::reset()
 {}
 
 int OneMax2_Individual::calculateIndividualFitness()
@@ -20,17 +15,25 @@ int OneMax2_Individual::calculateIndividualFitness()
 	if(fitness == -1)
 	{
 		fitness = 0;
-		
 		for(int i = 0; i < maxLength; i++)
 			if(bitstring[i] == 1)
 				fitness++;
-		double t;
-		if(2 * fitness < maxLength)
-			fitness = maxLength - fitness;
-		else if(2 * fitness > maxLength+1)
-			fitness = (double)fitness  * (1.0 + k) - ((double)maxLength * k / 2.0);
-		else fitness = maxLength / 2;
+// left side			
+		if(fitness < maxLength / 2)
+			fitness = maxLength - fitness; // only '0's count
+// right side
+		else 
+			fitness = (int)((double)(fitness * k)/100.0);
 	}
 	return(fitness);
 }
 
+void OneMax2_Individual::printFitnessLandscape()
+{
+	double* fitness_array = new double[101];
+	for(int i = 0; i <= 50; i++)
+		fitness_array[i] = 50 - i;
+	for(int i = 0; i < 50; i++)
+		fitness_array[i+51] = (double)i*1.2;
+	printIndividualFitnessLandscape("onemax2", "OneMax two peaks fitness landscape (alpha = 1.2)", "Number of 1s", fitness_array, 101);
+}

@@ -6,10 +6,11 @@
 class OneMax_Individual : public Individual
 {
 	public:
-		OneMax_Individual(int max_length);
+		OneMax_Individual();
 		~OneMax_Individual();
+		void reset();
 		int calculateIndividualFitness();
-		void createOnEstimatedDistribution(double* p);
+		void printFitnessLandscape();
 
 };
 

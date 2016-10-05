@@ -6,10 +6,11 @@
 class Leading_Individual : public Individual
 {
 	public:
-		Leading_Individual(int max_length);
+		Leading_Individual();
 		~Leading_Individual();
+		void reset();
 		int calculateIndividualFitness();
-		void createOnEstimatedDistribution(double* p);
+		void printFitnessLandscape();
 
 };
 
