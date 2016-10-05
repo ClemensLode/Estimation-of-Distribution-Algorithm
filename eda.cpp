@@ -24,37 +24,48 @@ int main()
 	std::list<Result*> result_list;
 
 	Parameter parameter;
-/*
-	parameter.problemType = ONEMAX_PROBLEM;
-	parameter.setTestRuns(100, 100, 0);
-	parameter.setMaxGenerations(100, 100, 0);
-	parameter.setMaxLength(250, 250, 0);
-//	double n = sqrt( pow(2.0, (double)parameter.maxLength) / (double)parameter.maxLength);
-	parameter.setPopSize(50, 250, 3);
+
+	parameter.testCorrectionType(NO_CORRECTION);
+	parameter.testCorrectionType(NO_CORRECTION_BOUNDED);
+	parameter.testCorrectionType(LAPLACE_CORRECTION);
+	parameter.testCorrectionType(LAPLACE_REMEMBER_CORRECTION);
+	parameter.testCorrectionType(DIVERSITY_CORRECTION);
+	parameter.testCorrectionType(DIVERSITY_CORRECTION_BOUNDED);
+	parameter.testCorrectionType(DIVERSITY_CORRECTION_LAPLACE);
+	parameter.testCorrectionType(TEST_CORRECTION);
+
+	parameter.setUseExactRandomDistribution(false, true);
 	parameter.setRememberAndReuseSamplingError(false, false);
-	parameter.setUseExactRandomDistribution(false, false);*/
-
-
-	parameter.problemType = NEEDLE_HAYSTACK_PROBLEM;
-	parameter.setTestRuns(50, 50, 0);
-	parameter.setMaxGenerations(100, 100, 0);
-	parameter.setMaxLength(15, 15, 0);
-//	double n = sqrt( pow(2.0, (double)parameter.maxLength) / (double)parameter.maxLength);
-//	parameter.setPopSize((int)n, (int)n*50, 3);
-	parameter.setPopSize(200, 1000, 5);
-	parameter.setRememberAndReuseSamplingError(false, false);
-	parameter.setUseExactRandomDistribution(false, false);
-
-	
 // => N
 	parameter.setSelection(0.5, 0.5, 0);
-	parameter.setUseSamplingErrorReduction(false, true);
-
 // important! without this 00000 will be harder to archieve than 1111 because of rounding... mmmh... (randomOneMax)
 // Fehler im Programm: Bei Selection 1.0 und RandomOneMax = false ergibt sich trotzdem eine Tendenz zum Ergebnis!
 // Wahrscheinlich wird p so veraendert, dass es langsam richtig 1 geht, unabhaengig von der tatsaechlichen Loesung.
 	parameter.setRandomOneMax(true, false);
-	parameter.setCorrectionType(LAPLACE_CORRECTION, false);
+
+	
+//	parameter.problemType = ONEMAX_PROBLEM;
+//	parameter.setTestRuns(50, 50, 0);
+//	parameter.setMaxGenerations(200, 200, 0);
+//	parameter.setMaxLength(500, 500, 0);
+//	double n = sqrt( pow(2.0, (double)parameter.maxLength) / (double)parameter.maxLength);
+//	parameter.setPopSize(10, 100, 4);
+
+	parameter.problemType = ONEMAX_TWO_PEAKS_PROBLEM;
+	parameter.setTestRuns(25, 25, 0);
+	parameter.setMaxGenerations(100, 100, 0);
+	parameter.setMaxLength(100, 100, 0);
+//	double n = sqrt( pow(2.0, (double)parameter.maxLength) / (double)parameter.maxLength);
+	parameter.setPopSize(100, 100, 0);
+	parameter.setk(0.05, 0.05, 0);
+
+
+//	parameter.problemType = NEEDLE_HAYSTACK_PROBLEM;
+//	parameter.setTestRuns(50, 50, 0);
+//	parameter.setMaxGenerations(200, 200, 0);
+//	parameter.setMaxLength(10, 10, 0);
+//	parameter.setPopSize(10, 100, 4);
+
 	
 	do
 	{
@@ -62,7 +73,7 @@ int main()
 		Test test(parameter);
 		test.run();
 	
-		Result* r = new Result(parameter, test.getResults());
+		Result* r = new Result(parameter, test.getFitnessResults(), test.getDiversityResults());
 		result_list.push_back(r);
 
 		parameter.createNextParameter();
@@ -74,7 +85,8 @@ int main()
 
 	std::string basename;
 	std::string description;
-	std::string parameter_description[result_nr/2];
+	std::string parameter_description[result_nr/parameter.getCorrectionTypeCount()];
+	std::string correction_description[parameter.getCorrectionTypeCount()];
 	
 	switch(parameter.problemType)
 	{
@@ -82,9 +94,13 @@ int main()
 			basename = "graph_onemax";
 			description = "OneMax";
 			break;
+		case ONEMAX_TWO_PEAKS_PROBLEM:
+			basename = "graph_onemax_two";
+			description = "OneMax Two Peaks";
+			break;
 		case NEEDLE_HAYSTACK_PROBLEM:
 			basename = "graph_haystack";
-			description = "Needle in a haystack";
+			description = "Flat fitness landscape";
 			break;
 		case NQUEENS_PROBLEM:
 			basename = "graph_nqueens";
@@ -102,11 +118,10 @@ int main()
 		(*i)->calculateAverage();
 		FILE* f;
 		std::string data_file_name;
-		
+	
 		{
-			std::ostringstream os;
-			os.str("");
-			os << basename << "/" << basename << j << ".gnp";
+			std::ostringstream os; os.str("");
+			os << basename << "/" << basename << j << "_fitness.gnp";
 			data_file_name = os.str();
 		}
 		
@@ -114,19 +129,18 @@ int main()
 			fprintf(stderr, "Cannot open %s\n", "output_file");
 		else
 		{
-			std::ostringstream os;
+			std::ostringstream os; os.str("");
 			os << "# " << (*i)->parameter.print() << std::endl;
 			fprintf(f, os.str().c_str());
 
 			for(int k = 0; k < (*i)->parameter.maxGenerations; k++)
-				fprintf(f, "%i %f\n", k, (*i)->average[k]);
+				fprintf(f, "%i %f\n", k, (*i)->fitness_average[k]);
 			fclose(f);
 		}
 
-		{
-			std::ostringstream os;
-			os.str("");
-			os << basename << "/" << basename << j << "_quartil.gnp";
+/*		{
+			std::ostringstream os; os.str("");
+			os << basename << "/" << basename << j << "_fitness_quartil.gnp";
 			data_file_name = os.str();
 		}
 		
@@ -134,21 +148,62 @@ int main()
 			fprintf(stderr, "Cannot open %s\n", "output_file");
 		else
 		{
-			std::ostringstream os;
+			std::ostringstream os; os.str("");
 			os << "# " << (*i)->parameter.print() << std::endl;
 			fprintf(f, os.str().c_str());
 			for(int k = 0; k < (*i)->parameter.maxGenerations; k++)
-				fprintf(f, "%i %f\n", k, (*i)->q_14[k]);
+				fprintf(f, "%i %f\n", k, (*i)->fitness_q_14[k]);
 			fprintf(f, "\n");
 			for(int k = 0; k < (*i)->parameter.maxGenerations; k++)
-				fprintf(f, "%i %f\n", k, (*i)->q_34[k]);
+				fprintf(f, "%i %f\n", k, (*i)->fitness_q_34[k]);
 
+			fclose(f);
+		}*/
+	
+		{
+			std::ostringstream os; os.str("");
+			os << basename << "/" << basename << j << "_diversity.gnp";
+			data_file_name = os.str();
+		}
+		
+		if ((f = fopen(data_file_name.c_str(), "w")) == NULL)
+			fprintf(stderr, "Cannot open %s\n", "output_file");
+		else
+		{
+			std::ostringstream os; os.str("");
+			os << "# " << (*i)->parameter.print() << std::endl;
+			fprintf(f, os.str().c_str());
+
+			for(int k = 0; k < (*i)->parameter.maxGenerations; k++)
+				fprintf(f, "%i %f\n", k, (*i)->diversity_average[k]);
 			fclose(f);
 		}
 
-		if(j < result_nr / 2)
+/*		{
+			std::ostringstream os; os.str("");
+			os << basename << "/" << basename << j << "_diversity_quartil.gnp";
+			data_file_name = os.str();
+		}
+		
+		if ((f = fopen(data_file_name.c_str(), "w")) == NULL)
+			fprintf(stderr, "Cannot open %s\n", "output_file");
+		else
 		{
-			parameter_description[j] = "";
+			std::ostringstream os; os.str("");
+			os << "# " << (*i)->parameter.print() << std::endl;
+			fprintf(f, os.str().c_str());
+			for(int k = 0; k < (*i)->parameter.maxGenerations; k++)
+				fprintf(f, "%i %f\n", k, (*i)->diversity_q_14[k]);
+			fprintf(f, "\n");
+			for(int k = 0; k < (*i)->parameter.maxGenerations; k++)
+				fprintf(f, "%i %f\n", k, (*i)->diversity_q_34[k]);
+
+			fclose(f);
+		}*/
+		if(j % parameter.getCorrectionTypeCount() == 0)
+		{
+			int t = j / parameter.getCorrectionTypeCount();
+			parameter_description[t] = "";
 			std::ostringstream os;
 			os << "(";
 			if((*i)->parameter.rememberAndReuseSamplingError)
@@ -156,33 +211,104 @@ int main()
 			if((*i)->parameter.useExactRandomDistribution)
 				os << "Exact Random Distribution, ";
 			os << "PopSize: " << (*i)->parameter.popSize << ")";
-			parameter_description[j] = os.str();
+			parameter_description[t] = os.str();
 		}
 			
 		
 		delete (*i);
 	}
 
+	for(int i = 0; i < parameter.getCorrectionTypeCount(); i++)
+	{
+		correction_description[i] = "";
+		switch(parameter.correction[i])
+		{
+			case NO_CORRECTION:correction_description[i] = "No correction";break;
+			case NO_CORRECTION_BOUNDED:correction_description[i] = "No correction + bounded";break;
+			case LAPLACE_CORRECTION:correction_description[i] = "Laplace correction";break;
+			case LAPLACE_REMEMBER_CORRECTION:correction_description[i] = "Laplace remember correction";break;
+			case DIVERSITY_CORRECTION:correction_description[i] = "Corrected distribution";break;
+			case DIVERSITY_CORRECTION_BOUNDED:correction_description[i] = "Corrected distribution + bounded";break;
+			case DIVERSITY_CORRECTION_LAPLACE:correction_description[i] = "Corrected distribution + Laplace";break;
+			case TEST_CORRECTION:correction_description[i] = "(1 - 1/N) loss / generation";break;
+			default:break;
+		}
+	}
+
+	
+	
+
 	std::string gnuplot_file_name;
 	{
 		std::ostringstream os;
-		os << basename << result_nr << ".plot";
+		os << basename << result_nr << ".plt";
 		gnuplot_file_name = os.str();
 	}
+
 	
 	FILE* f;
 	if ((f = fopen(gnuplot_file_name.c_str(), "w")) == NULL)
 		fprintf(stderr, "Cannot open %s\n", "output_file");
 	else
 	{
-		fprintf(f, "set xlabel 'generation'\nset ylabel 'fitness'\nset terminal png large size 750,500\nset style line 1 lt 1 lw 3\nset style line 2 lt 2 lw 3\nset style line 3 lt 1 lw 1\nset style line 4 lt 2 lw 1\n\n"); 
-		for(int i = 0; i < result_nr/2; i++)
+		fprintf(f, "set xlabel 'generation'\nset ylabel 'fitness'\nset terminal png large size 750,500\n");
+		for(int h = 0; h < parameter.getCorrectionTypeCount(); h++)
+			fprintf(f, "set style line %i lt %i lw 3\n", h+1, h+1);
+		for(int h = 0; h < parameter.getCorrectionTypeCount(); h++)
+			fprintf(f, "set style line %i lt %i lw 1\n", h + 1 + parameter.getCorrectionTypeCount(), h+1);
+		fprintf(f, "\n");
+
+		if(parameter.problemType != NEEDLE_HAYSTACK_PROBLEM)
 		{
-			fprintf(f, "set output \"%s/%s%i.png\"\n", basename.c_str(), basename.c_str(), i);
-			fprintf(f, "set title '%s %s'\n", description.c_str(), parameter_description[i].c_str());
-			fprintf(f, "plot \"%s/%s%i.gnp\" ti \"Laplace\" with lines ls 1, \"%s/%s%i.gnp\" ti \"Corrected distribution\" with lines ls 2, ", basename.c_str(), basename.c_str(), i, basename.c_str(), basename.c_str(), i + result_nr / 2);
-			fprintf(f, "\"%s/%s%i_quartil.gnp\" ti \"Laplace 1/4 and 3/4 quartil\" with lines ls 3, \"%s/%s%i_quartil.gnp\" ti \"Corrected distribution 1/4 and 3/4 quartil\" with lines ls 4\n", basename.c_str(), basename.c_str(), i, basename.c_str(), basename.c_str(), i + result_nr / 2);
+		for(int i = 0; i < result_nr / parameter.getCorrectionTypeCount(); i++)
+		{
+			fprintf(f, "set output \"%s/%s%03i_fitness.png\"\n",
+				basename.c_str(), basename.c_str(), i);
+			fprintf(f, "set title '%s %s'\n", 
+				description.c_str(), parameter_description[i].c_str());
+			fprintf(f, "plot ");
+			
+			for(int h = 0; h < parameter.getCorrectionTypeCount(); h++)
+			if(parameter.correction[h] != TEST_CORRECTION)
+			{	
+				fprintf(f, "\"%s/%s%i_fitness.gnp\" ti \"%s\" with lines ls %i", 
+					basename.c_str(), basename.c_str(), i*parameter.getCorrectionTypeCount()+h, correction_description[h].c_str(), h+1);
+//				fprintf(f, ", \"%s/%s%i_fitness_quartil.gnp\" ti \"%s 1/4 and 3/4 quartil\" with lines ls %i", 
+//					basename.c_str(), basename.c_str(), i*parameter.getCorrectionTypeCount()+h, correction_description[h].c_str(), h+1+parameter.getCorrectionTypeCount());
+				if((h != parameter.getCorrectionTypeCount() - 1) && (parameter.correction[h+1] != TEST_CORRECTION))
+					fprintf(f, ", ");
+			} else if(h != parameter.getCorrectionTypeCount() - 1)
+				fprintf(f, ", ");
+			fprintf(f, "\n\n");
     		}
+		fprintf(f, "\n\n");
+		}
+		fprintf(f, "set xlabel 'generation'\nset ylabel 'diversity p*(1-p)'\nset terminal png large size 750,500\n\n");
+
+		for(int i = 0; i < result_nr / parameter.getCorrectionTypeCount(); i++)
+		{
+			fprintf(f, "set output \"%s/%s%03i_diversity.png\"\n",
+				basename.c_str(), basename.c_str(), i);
+			fprintf(f, "set title '%s %s'\n", 
+				description.c_str(), parameter_description[i].c_str());
+			fprintf(f, "plot ");
+			
+			for(int h = 0; h < parameter.getCorrectionTypeCount(); h++)
+			{	
+				fprintf(f, "\"%s/%s%i_diversity.gnp\" ti \"%s\" with lines ls %i", 
+					basename.c_str(), basename.c_str(), i*parameter.getCorrectionTypeCount()+h, correction_description[h].c_str(), h+1);
+				if(parameter.correction[h] != TEST_CORRECTION)
+				{
+//					fprintf(f, ", \"%s/%s%i_diversity_quartil.gnp\" ti \"%s 1/4 and 3/4 quartil\" with lines ls %i", 
+//						basename.c_str(), basename.c_str(), i*parameter.getCorrectionTypeCount()+h, correction_description[h].c_str(), h+1+parameter.getCorrectionTypeCount());
+					if(h != parameter.getCorrectionTypeCount() - 1)
+						fprintf(f, ", ");
+				}
+			}
+			fprintf(f, "\n\n");
+    		}
+		fprintf(f, "\n\n");
+		
 		fclose(f);
 	}
 	char a = getchar();

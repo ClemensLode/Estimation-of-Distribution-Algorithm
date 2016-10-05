@@ -38,9 +38,11 @@ bool test_int(int& value, int min, int max, int steps)
 	return false;
 }
 
-
 Parameter::Parameter()
-{}
+{
+	correctionCount = 0;
+	currentCorrection = 0;
+}
 
 Parameter::~Parameter()
 {}
@@ -48,35 +50,28 @@ Parameter::~Parameter()
 const bool Parameter::isStartConfiguration() const
 {
 	return( testRuns == minTestRuns && popSize == minPopSize && maxGenerations == minMaxGenerations && maxLength == minMaxLength && 
-			selection == minSelection && randomOneMax == randomOneMaxSet && 
-			useSamplingErrorReduction == useSamplingErrorReductionSet &&
+			k == mink && selection == minSelection && randomOneMax == randomOneMaxSet && 
 			rememberAndReuseSamplingError == rememberAndReuseSamplingErrorSet &&
 			useExactRandomDistribution == useExactRandomDistributionSet && 
-			correction == correctionSet );
+			currentCorrection == 0 );
 }
 
 std::string Parameter::print() const
 {
 	std::ostringstream os;
-	os << "Runs: " << testRuns << " Size:" << popSize << " Generations:" << maxGenerations << " Length:" << maxLength << " Selection:" << selection << " Random goalstring:" << randomOneMax << " Corrected distribution:" << useSamplingErrorReduction << " Exact Random Distribution:" << useExactRandomDistribution << " Remember Remainder:" << rememberAndReuseSamplingError << " Correction:" << correction;
+	os << "Runs: " << testRuns << " Size:" << popSize << " Generations:" << maxGenerations << " Length:" << maxLength << " Selection:" << selection << " Random goalstring:" << randomOneMax << " Exact Random Distribution:" << useExactRandomDistribution << " Remember Remainder:" << rememberAndReuseSamplingError << " Correction:" << currentCorrection;
+	if(problemType == ONEMAX_TWO_PEAKS_PROBLEM)
+		os << " k:" << k;
 	return os.str();
 }
 
 void Parameter::createNextParameter()
 {
-
-	if(correctionChange)
-	{
-		switch(correction)
-		{
-			case LAPLACE_CORRECTION: correction = NON_ZERO_CORRECTION;break;
-			case NON_ZERO_CORRECTION: correction = NO_CORRECTION;break;
-			case NO_CORRECTION: correction = LAPLACE_CORRECTION;break;
-			default:break;
-		}
-		if(correction != correctionSet)
-			return;
-	}
+	currentCorrection++;
+	if(currentCorrection >= correctionCount)
+		currentCorrection = 0;
+	if(currentCorrection != 0)
+		return;
 	
 	if(test_bool(useExactRandomDistribution, useExactRandomDistributionSet, useExactRandomDistributionChange))
 		return;
@@ -90,6 +85,9 @@ void Parameter::createNextParameter()
 	if(test_double(selection, minSelection, maxSelection, selectionSteps))
 		return;
 
+	if(test_double(k, mink, maxk, kSteps))
+		return;
+
 	if(test_int(maxLength, minMaxLength, maxMaxLength, maxLengthSteps))
 		return;
 	
@@ -101,9 +99,6 @@ void Parameter::createNextParameter()
 		
 	if(test_int(testRuns, minTestRuns, maxTestRuns, testRunsSteps))
 		return;
-	if(test_bool(useSamplingErrorReduction, useSamplingErrorReductionSet, useSamplingErrorReductionChange))
-		return;
-	
 }
 
 
@@ -139,6 +134,14 @@ void Parameter::setMaxLength(int min, int max, int steps)
 	maxLengthSteps = steps;
 }
 
+void Parameter::setk(double min, double max, int steps) 
+{
+	k = min;
+	mink = min; 
+	maxk = max; 
+	kSteps = steps;
+}
+
 void Parameter::setSelection(double min, double max, int steps) 
 {
 	selection = min;
@@ -152,13 +155,6 @@ void Parameter::setRandomOneMax(bool set, bool change)
 	randomOneMax = set;
 	randomOneMaxSet = set; 
 	randomOneMaxChange = change;
-}
-
-void Parameter::setUseSamplingErrorReduction(bool set, bool change) 
-{
-	useSamplingErrorReduction = set;
-	useSamplingErrorReductionSet = set; 
-	useSamplingErrorReductionChange = change;
 }
 
 void Parameter::setRememberAndReuseSamplingError(bool set, bool change) 
@@ -175,10 +171,15 @@ void Parameter::setUseExactRandomDistribution(bool set, bool change)
 	useExactRandomDistributionChange = change;
 }
 
-void Parameter::setCorrectionType(eCorrectionType set, bool change) 
+void Parameter::testCorrectionType(eCorrectionType set)
 {
-	correction = set;
-	correctionSet = set; 
-	correctionChange = change;
+	correction[correctionCount] = set;
+	correctionCount++;
 }
+
+int Parameter::getCorrectionTypeCount() const
+{
+	return correctionCount;
+}
+
 

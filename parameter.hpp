@@ -8,16 +8,23 @@ enum eProblemType
 	NEEDLE_HAYSTACK_PROBLEM,
 
 	ONEMAX_PROBLEM,
+	ONEMAX_TWO_PEAKS_PROBLEM,
 	NQUEENS_PROBLEM
 };
 
 enum eCorrectionType
 {
-	LAPLACE_CORRECTION = 0,
-	NON_ZERO_CORRECTION = 1,
-	NO_CORRECTION = 2
+	NO_CORRECTION = 0,
+	NO_CORRECTION_BOUNDED,
+	LAPLACE_REMEMBER_CORRECTION,
+	LAPLACE_CORRECTION,
+	DIVERSITY_CORRECTION,
+	DIVERSITY_CORRECTION_BOUNDED,
+	DIVERSITY_CORRECTION_LAPLACE,
+	TEST_CORRECTION, // just a reduction of variance by 1 - 1/n to compare
+	MAX_CORRECTION_TYPES
+	// bounded: set p = 1/N if p < 1/N and p = 1 - 1/N if p > 1 - 1/N
 };
-
 
 class Parameter
 {
@@ -28,9 +35,8 @@ class Parameter
 		void createNextParameter();
 		const bool isStartConfiguration() const;
 
-
 		eProblemType problemType;
-		
+
 // number of similar test runs, 24 in order to fit on a standard windows terminal
 		int testRuns;
 		int minTestRuns, maxTestRuns, testRunsSteps;
@@ -48,6 +54,12 @@ class Parameter
 		int maxLength;
 		int minMaxLength, maxMaxLength, maxLengthSteps;
 		void setMaxLength(int min, int max, int steps);
+	
+// const for OneMax Two peaks
+		double k;
+		double mink, maxk;
+		int kSteps;
+		void setk(double min, double max, int steps);
 		
 // Percentage of individuals to select for the distribution
 		double selection;
@@ -75,10 +87,12 @@ class Parameter
 // 0: Laplace, 1: No correction, 2: Non-Zero correction
 // No correction: Simply divide the number of occurences of '1' by the sample size
 // Non-Zero correction: Same as No Correction but if p is 0.0 or 1.0 change it to 1.0/N or 1.0 - 1.0/N
-		eCorrectionType correction;
-		eCorrectionType correctionSet;
-		bool correctionChange;
-		void setCorrectionType(eCorrectionType set, bool change);
+
+		int currentCorrection;
+		eCorrectionType correction[MAX_CORRECTION_TYPES];
+		int correctionCount;
+		void testCorrectionType(eCorrectionType set);
+		int getCorrectionTypeCount() const;
 };
 
 #endif

@@ -1,19 +1,31 @@
 #include "result.hpp"
 
-Result::Result(const Parameter& my_parameter, double* results):
+Result::Result(const Parameter& my_parameter, double* fitness_results, double* diversity_results):
 	parameter(my_parameter),
-	fitness(results),
-	q_14(new double[parameter.maxGenerations]),
-	q_34(new double[parameter.maxGenerations]),
-	average(new double[parameter.maxGenerations])
+	fitness(fitness_results),
+	diversity(diversity_results),
+	fitness_q_14(new double[parameter.maxGenerations]),
+	fitness_q_34(new double[parameter.maxGenerations]),
+	fitness_average(new double[parameter.maxGenerations]),
+	
+	diversity_q_14(new double[parameter.maxGenerations]),
+	diversity_q_34(new double[parameter.maxGenerations]),
+	diversity_average(new double[parameter.maxGenerations])
+
 {}
 
 Result::~Result()
 {
 	delete fitness;
-	delete q_14;
-	delete q_34;
-	delete average;
+	delete diversity;
+	
+	delete fitness_q_14;
+	delete fitness_q_34;
+	delete fitness_average;
+
+	delete diversity_q_14;
+	delete diversity_q_34;
+	delete diversity_average;
 }
 #include <stdio.h>
 
@@ -21,57 +33,58 @@ void Result::calculateAverage()
 {
 	for(int k = 0; k < parameter.maxGenerations; k++)
 	{
-		for(int l = 0; l < parameter.testRuns; l++)
-			for(int m = 0; m < l; m++)
-				if(fitness[l * parameter.maxGenerations + k] > fitness[m * parameter.maxGenerations + k])
+		for(int l = 0; l < parameter.testRuns - 2; l++)
+			for(int m = 0; m < parameter.testRuns - l - 1; m++)
+				// sort
+				if(fitness[m * parameter.maxGenerations + k] < fitness[(m+1) * parameter.maxGenerations + k])
 				{
-					double t = fitness[l * parameter.maxGenerations + k];
-					fitness[l * parameter.maxGenerations + k] = fitness[m * parameter.maxGenerations + k];
-					fitness[m * parameter.maxGenerations + k] = t;
+					double t = fitness[m * parameter.maxGenerations + k];
+					fitness[m * parameter.maxGenerations + k] = fitness[(m+1) * parameter.maxGenerations + k];
+					fitness[(m+1) * parameter.maxGenerations + k] = t;
 				}
-		average[k] = 0.0;
+		
+		for(int l = 0; l < parameter.testRuns - 2; l++)
+			for(int m = 0; m < parameter.testRuns - l - 1; m++)
+				// sort
+				if(fitness[m * parameter.maxGenerations + k] < fitness[(m+1) * parameter.maxGenerations + k])
+				{
+					double t = diversity[m * parameter.maxGenerations + k];
+					diversity[m * parameter.maxGenerations + k] = diversity[(m+1) * parameter.maxGenerations + k];
+					diversity[(m+1) * parameter.maxGenerations + k] = t;				
+				}
+
+		fitness_average[k] = 0.0;
+		diversity_average[k] = 0.0;
 		int m = 0;
-		for(int l = parameter.testRuns * 0.25; l < parameter.testRuns * 0.75 ; l++)
+		double tt;
+		for(int l = 0; l < parameter.testRuns; l++)
 		{
-			average[k] += fitness[l * parameter.maxGenerations + k];
+			fitness_average[k] += fitness[l * parameter.maxGenerations + k];
+			diversity_average[k] += diversity[l * parameter.maxGenerations + k];
 			m++;
 		}
-		average[k] /= m;
+		fitness_average[k] /= m;
+		diversity_average[k] /= m;
 
-		q_14[k] = 0.0;
-		q_34[k] = 0.0;
+		fitness_q_14[k] = 0.0;
+		fitness_q_34[k] = 0.0;
+		diversity_q_14[k] = 0.0;
+		diversity_q_34[k] = 0.0;
+	
 		m = 0;
-		for(int l = 0; l < parameter.testRuns * 0.24 ; l++)
+		for(int l = 0; l < parameter.testRuns * 0.25 ; l++)
 		{
 			m++;
-			q_14[k] += fitness[l * parameter.maxGenerations + k];
+			fitness_q_14[k] += fitness[l * parameter.maxGenerations + k];
+			fitness_q_34[k] += fitness[(parameter.testRuns - l - 1) * parameter.maxGenerations + k];
+			
+			diversity_q_14[k] += diversity[l * parameter.maxGenerations + k];
+			diversity_q_34[k] += diversity[(parameter.testRuns - l - 1) * parameter.maxGenerations + k];
 		}
-		q_14[k] /= m;
-
-		m = 0;
-		for(int l = parameter.testRuns * 0.76; l < parameter.testRuns; l++)
-		{
-			m++;
-			q_34[k] += fitness[l * parameter.maxGenerations + k];
-		}
-		q_34[k] /= m;
-
-/*		if(parameter.testRuns % 4 == 0)
-		{
-			q_14[k] = fitness[(int)(0.25 * parameter.maxGenerations) + k];
-			q_34[k] = fitness[(int)(0.75 * parameter.maxGenerations) + k];
-		}
-		else
-		{
-			q_14[k] = 0.0;
-			for(int l = parameter.testRuns * 0.25; l <= parameter.testRuns * 0.25 + 1; l++)
-				q_14[k] += fitness[l * parameter.maxGenerations + k];
-			q_14[k] /= 2.0;
-			q_34[k] = 0.0;
-			for(int l = parameter.testRuns * 0.75; l <= parameter.testRuns * 0.75 + 1; l++)
-				q_34[k] += fitness[l * parameter.maxGenerations + k];
-			q_34[k] /= 2.0;
-		}*/
+		fitness_q_14[k] /= m;
+		fitness_q_34[k] /= m;
+		diversity_q_14[k] /= m;
+		diversity_q_34[k] /= m;
 	}
 }
 

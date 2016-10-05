@@ -1,6 +1,7 @@
 #include "test.hpp"
 
 #include "onemax_individual.hpp"
+#include "onemax2_individual.hpp"
 #include "haystack_individual.hpp"
 #include "nqueens_individual.hpp"
 
@@ -9,7 +10,8 @@
 #include <stdio.h>
 Test::Test(const Parameter& my_parameter):
 	parameter(my_parameter),
-	results(new double[parameter.testRuns * parameter.maxGenerations]),
+	fitnessResults(new double[parameter.testRuns * parameter.maxGenerations]),
+	diversityResults(new double[parameter.testRuns * parameter.maxGenerations]),
 	N((double)parameter.popSize * parameter.selection)
 {}
 
@@ -40,6 +42,18 @@ void Test::run()
 			else 
 				for(int i = 0; i < parameter.maxLength; i++)
 					Individual::goalString[i] = 1;
+			break;
+		case ONEMAX_TWO_PEAKS_PROBLEM:
+			p = new double[parameter.maxLength];
+/*			Individual::goalString = new int[parameter.maxLength];
+			if(parameter.randomOneMax)
+			{
+				for(int i = 0; i < parameter.maxLength; i++)
+					Individual::goalString[i] = rand()%2;
+			}
+			else 
+				for(int i = 0; i < parameter.maxLength; i++)
+					Individual::goalString[i] = 1;*/
 			break;
 		case NQUEENS_PROBLEM:
 			p = new double[parameter.maxLength * parameter.maxLength];
@@ -81,6 +95,13 @@ void Test::run()
 				for(int i = 0; i < parameter.popSize; i++)
 					individual[i] = new OneMax_Individual(parameter.maxLength);
 				break;
+			case ONEMAX_TWO_PEAKS_PROBLEM:
+				for(int i = 0; i < parameter.maxLength; i++)
+					p[i] = 0.5;
+				for(int i = 0; i < parameter.popSize; i++)
+					individual[i] = new OneMax2_Individual(parameter.maxLength);
+				break;
+
 			case NQUEENS_PROBLEM:
 				for(int i = 0; i < parameter.maxLength * parameter.maxLength; i++)
 					p[i] = 1 / (double)parameter.maxLength;
@@ -96,21 +117,46 @@ void Test::run()
 		while(generation < parameter.maxGenerations)
 		{
 // calculate fitness and sort individuals, highest fitness first
-			for(int i = 0; i < parameter.popSize; i++)
-				for(int j = 0; j < i; j++)
-					if(individual[i]->calculateIndividualFitness() > individual[j]->calculateIndividualFitness())
+			for(int i = 0; i < parameter.popSize - 2; i++)
+				for(int j = 0; j < parameter.popSize - i - 1; j++)
+					if(individual[j]->calculateIndividualFitness() < individual[(j+1)]->calculateIndividualFitness())
 					{
-						Individual* t = individual[i];
-						individual[i] = individual[j];
-						individual[j] = t;
+						Individual* t = individual[j];
+						individual[j] = individual[(j+1)];
+						individual[(j+1)] = t;
 					}
+			if(parameter.correction[parameter.currentCorrection] == TEST_CORRECTION)
+			{
+				fitnessResults[z * parameter.maxGenerations + generation] = 0.0;
+				if(generation == 0)
+					diversityResults[z * parameter.maxGenerations + generation] = 0.25;
+				else
+					diversityResults[z * parameter.maxGenerations + generation] = 
+						diversityResults[z * parameter.maxGenerations + generation-1] * (double)(1.0 - 1.0 / N);
+			} else
+			{
+				double averageDiversity = 0.0;
+				for(int i = 0; i < parameter.maxLength; i++)
+					averageDiversity += p[i] * (1.0 - p[i]);
+				averageDiversity /= (double)parameter.maxLength;
 // record best fitness
-			results[z * parameter.maxGenerations + generation] = individual[0]->calculateIndividualFitness();
+				fitnessResults[z * parameter.maxGenerations + generation] = individual[0]->calculateIndividualFitness();
+				diversityResults[z * parameter.maxGenerations + generation] = averageDiversity;
+			}
 			generation++;
+
+			double* oldp;
+//			if(parameter.correction[parameter.currentCorrection] == LAPLACE_REMEMBER_CORRECTION)
+//			{
+			oldp = new double[parameter.maxLength];
+			for(int i = 0; i < parameter.maxLength; i++)
+				oldp[i] = p[i];
+//			}
 
 // Gather data from selected individuals
 			switch(parameter.problemType)
 			{
+				case ONEMAX_TWO_PEAKS_PROBLEM:
 				case NEEDLE_HAYSTACK_PROBLEM:
 				case ONEMAX_PROBLEM:
 // Just UMDA, don't take distribution from last iteration into account
@@ -138,41 +184,70 @@ void Test::run()
 
 			for(int i = 0; i < parameter.maxLength; i++)
 			{
-				if(parameter.useSamplingErrorReduction)
+				switch(parameter.correction[parameter.currentCorrection])
 				{
-					p[i] = p[i] / N;
-					double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
-					
-					double q;
-					if(p[i] < p1)
-						q = 0.5 - c / 2.0;
-					else if(p[i] > p2)
-						q = 0.5 + c / 2.0;
-					else 
-						q = 0.5;
-					if(q > 1.0 - 1.0 / N)
-						q = 1.0 - 1.0 / N;
-					else if(q < 1.0 / N)
-						q = 1.0 / N;
-					p[i] = q;
-				}
-				else
-				{
-					switch(parameter.correction)
+					case NO_CORRECTION:p[i] = p[i] / N; break;
+					case NO_CORRECTION_BOUNDED:
 					{
-						case LAPLACE_CORRECTION:p[i] = (p[i] + 1.0) / (N + 2.0);break;
-						case NON_ZERO_CORRECTION:
-						{
-							p[i] = p[i] / N;
-							double min = 1.0 / N;
-							if(p[i] == 0.0)
-								p[i] = min;
-							else if(p[i] == 1.0)
-								p[i] = 1.0 - min;
-						}break;
-						case NO_CORRECTION:p[i] = p[i] / N;break;
-						default:break;
-					}
+						p[i] = p[i] / N;
+						double min = 1.0 / N;
+						if(p[i] < min)
+							p[i] = min;
+						else if(p[i] > 1.0 - min)
+							p[i] = 1.0 - min;
+					}break;
+					case DIVERSITY_CORRECTION_LAPLACE:
+					{
+						p[i] = (p[i] + 1.0) / (N + 2.0);
+						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
+						double q;
+						if(p[i] < p1)
+							q = 0.5 - c / 2.0;
+						else if(p[i] > p2)
+							q = 0.5 + c / 2.0;
+						else 
+							q = 0.5;
+						p[i] = q;
+					}break;
+					case LAPLACE_REMEMBER_CORRECTION:p[i] = (p[i] + 2.0*oldp[i]) / (N + 2.0);
+									 break;
+					case LAPLACE_CORRECTION:p[i] = (p[i] + 1.0) / (N + 2.0);break;
+					case DIVERSITY_CORRECTION:
+					{
+						p[i] = p[i] / N;
+						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
+						double q;
+						if(p[i] < p1)
+							q = 0.5 - c / 2.0;
+						else if(p[i] > p2)
+							q = 0.5 + c / 2.0;
+						else 
+							q = 0.5;
+						p[i] = q;
+					}break;
+
+					case DIVERSITY_CORRECTION_BOUNDED:
+					{
+						p[i] = p[i] / N;
+						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
+						double q;
+						if(p[i] < p1)
+							q = 0.5 - c / 2.0;
+						else if(p[i] > p2)
+							q = 0.5 + c / 2.0;
+						else 
+							q = 0.5;
+						double min = 1.0 / N;
+						if(q < min)
+							q = min;
+						else if(q > 1.0 - min)
+							q = 1.0 - min;
+						p[i] = q;
+					}break;
+					case TEST_CORRECTION:
+						p[i] = 0.5;
+					break;
+					default:break;
 				}
 			// bei NQUEENS ergibt sich jetzt fuer p:
 			// Summe einer Zeile in p muss immer 1 sein
@@ -192,6 +267,7 @@ void Test::run()
 				
 			} // end for(int i = 0; i < parameter.maxLength; i++)
 
+				 delete oldp;
 		// TODO Nqueens
 			if(parameter.useExactRandomDistribution)
 			{
@@ -230,6 +306,7 @@ void Test::run()
 	{
 		case NEEDLE_HAYSTACK_PROBLEM:
 		case ONEMAX_PROBLEM:delete Individual::goalString;break;
+		case ONEMAX_TWO_PEAKS_PROBLEM:break;
 		case NQUEENS_PROBLEM:break;
 		default:break;
 	}
@@ -238,9 +315,14 @@ void Test::run()
 	delete rounded_number;
 }
 
-double* Test::getResults() const
+double* Test::getFitnessResults() const
 {
-	return results;
+	return fitnessResults;
+}
+
+double* Test::getDiversityResults() const
+{
+	return diversityResults;
 }
 
 

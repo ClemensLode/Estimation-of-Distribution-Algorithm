@@ -17,7 +17,7 @@ class Individual
 		int fitness;
 // maxLength is problem size
 		int maxLength;
-            
+		
 		int* bitstring;
 		static int* goalString;
 };
