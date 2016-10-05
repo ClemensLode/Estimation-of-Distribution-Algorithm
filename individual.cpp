@@ -13,4 +13,5 @@ Individual::~Individual()
 }
 
 int* Individual::goalString = 0;
+int Individual::bestFitness = 0;
 

@@ -1,6 +1,6 @@
 #include "result.hpp"
 
-Result::Result(const Parameter& my_parameter, double* fitness_results, double* diversity_results):
+Result::Result(const Parameter& my_parameter, int* fitness_results, double* diversity_results):
 	parameter(my_parameter),
 	fitness(fitness_results),
 	diversity(diversity_results),
@@ -63,8 +63,8 @@ void Result::calculateAverage()
 			diversity_average[k] += diversity[l * parameter.maxGenerations + k];
 			m++;
 		}
-		fitness_average[k] /= m;
-		diversity_average[k] /= m;
+		fitness_average[k] /= (double)m;
+		diversity_average[k] /= (double)m;
 
 		fitness_q_14[k] = 0.0;
 		fitness_q_34[k] = 0.0;
@@ -81,10 +81,10 @@ void Result::calculateAverage()
 			diversity_q_14[k] += diversity[l * parameter.maxGenerations + k];
 			diversity_q_34[k] += diversity[(parameter.testRuns - l - 1) * parameter.maxGenerations + k];
 		}
-		fitness_q_14[k] /= m;
-		fitness_q_34[k] /= m;
-		diversity_q_14[k] /= m;
-		diversity_q_34[k] /= m;
+		fitness_q_14[k] /= (double)m;
+		fitness_q_34[k] /= (double)m;
+		diversity_q_14[k] /= (double)m;
+		diversity_q_34[k] /= (double)m;
 	}
 }
 

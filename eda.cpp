@@ -25,16 +25,17 @@ int main()
 
 	Parameter parameter;
 
-	parameter.testCorrectionType(NO_CORRECTION);
-	parameter.testCorrectionType(NO_CORRECTION_BOUNDED);
+//	parameter.testCorrectionType(NO_CORRECTION);
+//	parameter.testCorrectionType(NO_CORRECTION_BOUNDED);
 	parameter.testCorrectionType(LAPLACE_CORRECTION);
 	parameter.testCorrectionType(LAPLACE_REMEMBER_CORRECTION);
-	parameter.testCorrectionType(DIVERSITY_CORRECTION);
-	parameter.testCorrectionType(DIVERSITY_CORRECTION_BOUNDED);
+//	parameter.testCorrectionType(DIVERSITY_CORRECTION);
+//	parameter.testCorrectionType(DIVERSITY_CORRECTION_BOUNDED);
 	parameter.testCorrectionType(DIVERSITY_CORRECTION_LAPLACE);
-	parameter.testCorrectionType(TEST_CORRECTION);
+	parameter.testCorrectionType(DIVERSITY_CORRECTION_REMEMBER_LAPLACE);
+//	parameter.testCorrectionType(TEST_CORRECTION);
 
-	parameter.setUseExactRandomDistribution(false, true);
+	parameter.setUseExactRandomDistribution(true, false);
 	parameter.setRememberAndReuseSamplingError(false, false);
 // => N
 	parameter.setSelection(0.5, 0.5, 0);
@@ -44,32 +45,60 @@ int main()
 	parameter.setRandomOneMax(true, false);
 
 	
-//	parameter.problemType = ONEMAX_PROBLEM;
-//	parameter.setTestRuns(50, 50, 0);
-//	parameter.setMaxGenerations(200, 200, 0);
-//	parameter.setMaxLength(500, 500, 0);
-//	double n = sqrt( pow(2.0, (double)parameter.maxLength) / (double)parameter.maxLength);
-//	parameter.setPopSize(10, 100, 4);
-
-	parameter.problemType = ONEMAX_TWO_PEAKS_PROBLEM;
-	parameter.setTestRuns(25, 25, 0);
+	parameter.problemType = ONEMAX_PROBLEM;
+	parameter.setTestRuns(50, 50, 0);
 	parameter.setMaxGenerations(100, 100, 0);
 	parameter.setMaxLength(100, 100, 0);
 //	double n = sqrt( pow(2.0, (double)parameter.maxLength) / (double)parameter.maxLength);
-	parameter.setPopSize(100, 100, 0);
-	parameter.setk(0.05, 0.05, 0);
+	parameter.setPopSize(40, 40, 0);
 
+/*	parameter.problemType = ONEMAX_TWO_PEAKS_PROBLEM;
+	parameter.setTestRuns(50, 50, 0);
+	parameter.setMaxGenerations(100, 100, 0);
+	parameter.setMaxLength(400, 400, 0);
+	parameter.setPopSize(10, 100, 4);
+	parameter.setk(1.0, 1.0, 0);*/
+
+/*	parameter.problemType = LEADING_PROBLEM;
+	parameter.setTestRuns(50, 50, 0);
+	parameter.setMaxGenerations(100, 100, 0);
+	parameter.setMaxLength(400, 400, 0);
+	parameter.setPopSize(10, 100, 4);*/
+	parameter.setk(0.00, 0.30, 11);
 
 //	parameter.problemType = NEEDLE_HAYSTACK_PROBLEM;
 //	parameter.setTestRuns(50, 50, 0);
 //	parameter.setMaxGenerations(200, 200, 0);
 //	parameter.setMaxLength(10, 10, 0);
 //	parameter.setPopSize(10, 100, 4);
+		FILE* f;
+/*	           if ((f = fopen("twopeak.gnp", "w")) == NULL)
+                        fprintf(stderr, "Cannot open %s\n", "output_file");
+                else
+                {
+                        std::ostringstream os; os.str("");
+                        os << "# " << parameter.print() << std::endl;
+                        fprintf(f, os.str().c_str());
+			for(int fitness = 0; fitness <= parameter.maxLength; fitness++)
+			{
+		
+				double t;
+		if(2 * fitness < parameter.maxLength)
+			t = parameter.maxLength - fitness;
+		else if(2 * fitness > parameter.maxLength+1)
+			t = (double)fitness  * (1.0 + parameter.k) - ((double)parameter.maxLength * parameter.k / 2.0);
+		else t = (double)parameter.maxLength / 2.0;
+		fprintf(f, "%i %f\n", fitness, t);
+		
+			}
+			fclose(f);
+                }
 
-	
+	return 0;*/
+
 	do
 	{
-		srand(0);//time(NULL));
+		srand(0);
 		Test test(parameter);
 		test.run();
 	
@@ -83,6 +112,8 @@ int main()
 	int j = 0;
 	int result_nr = result_list.size();
 
+
+//	if(result_nr und correctiontypecount auf 0 testen
 	std::string basename;
 	std::string description;
 	std::string parameter_description[result_nr/parameter.getCorrectionTypeCount()];
@@ -94,6 +125,11 @@ int main()
 			basename = "graph_onemax";
 			description = "OneMax";
 			break;
+		case LEADING_PROBLEM:
+			basename = "graph_leading";
+			description = "Leading 1";
+			break;
+
 		case ONEMAX_TWO_PEAKS_PROBLEM:
 			basename = "graph_onemax_two";
 			description = "OneMax Two Peaks";
@@ -116,7 +152,6 @@ int main()
 // - 1/4 und 3/4 Stichprobenquartil berechnen
 		std::cout << (*i)->parameter.print() << std::endl;
 		(*i)->calculateAverage();
-		FILE* f;
 		std::string data_file_name;
 	
 		{
@@ -179,6 +214,8 @@ int main()
 			fclose(f);
 		}
 
+
+		
 /*		{
 			std::ostringstream os; os.str("");
 			os << basename << "/" << basename << j << "_diversity_quartil.gnp";
@@ -210,6 +247,8 @@ int main()
 				os << "Remember Sampling Error, ";
 			if((*i)->parameter.useExactRandomDistribution)
 				os << "Exact Random Distribution, ";
+//			if((*i)->parameter.problemType == ONEMAX_TWO_PEAKS_PROBLEM)
+				os << "k: " << (*i)->parameter.k << ", ";
 			os << "PopSize: " << (*i)->parameter.popSize << ")";
 			parameter_description[t] = os.str();
 		}
@@ -230,6 +269,7 @@ int main()
 			case DIVERSITY_CORRECTION:correction_description[i] = "Corrected distribution";break;
 			case DIVERSITY_CORRECTION_BOUNDED:correction_description[i] = "Corrected distribution + bounded";break;
 			case DIVERSITY_CORRECTION_LAPLACE:correction_description[i] = "Corrected distribution + Laplace";break;
+			case DIVERSITY_CORRECTION_REMEMBER_LAPLACE:correction_description[i] = "Corrected distribution + r. Laplace";break;
 			case TEST_CORRECTION:correction_description[i] = "(1 - 1/N) loss / generation";break;
 			default:break;
 		}
@@ -246,7 +286,6 @@ int main()
 	}
 
 	
-	FILE* f;
 	if ((f = fopen(gnuplot_file_name.c_str(), "w")) == NULL)
 		fprintf(stderr, "Cannot open %s\n", "output_file");
 	else

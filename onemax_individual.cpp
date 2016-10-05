@@ -9,7 +9,8 @@ void OneMax_Individual::createOnEstimatedDistribution(double* p)
 
 OneMax_Individual::OneMax_Individual(int max_length):
 	Individual(max_length)
-{}
+{
+}
 
 OneMax_Individual::~OneMax_Individual()
 {}
@@ -23,6 +24,6 @@ int OneMax_Individual::calculateIndividualFitness()
 			if(bitstring[i] == goalString[i])
 				fitness++;
 	}
-	return(fitness);	
+	return(fitness);
 }
 

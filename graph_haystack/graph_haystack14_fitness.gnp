@@ -1,4 +1,4 @@
-# Runs: 50 Size:40 Generations:200 Length:10 Selection:0.5 Random goalstring:1 Exact Random Distribution:0 Remember Remainder:0 Correction:0
+# Runs: 50 Size:10 Generations:200 Length:10 Selection:0.5 Random goalstring:1 Exact Random Distribution:1 Remember Remainder:0 Correction:5
 0 0.000000
 1 0.000000
 2 0.000000

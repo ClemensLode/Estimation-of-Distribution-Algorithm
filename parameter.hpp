@@ -9,6 +9,7 @@ enum eProblemType
 
 	ONEMAX_PROBLEM,
 	ONEMAX_TWO_PEAKS_PROBLEM,
+	LEADING_PROBLEM,
 	NQUEENS_PROBLEM
 };
 
@@ -21,6 +22,7 @@ enum eCorrectionType
 	DIVERSITY_CORRECTION,
 	DIVERSITY_CORRECTION_BOUNDED,
 	DIVERSITY_CORRECTION_LAPLACE,
+	DIVERSITY_CORRECTION_REMEMBER_LAPLACE,
 	TEST_CORRECTION, // just a reduction of variance by 1 - 1/n to compare
 	MAX_CORRECTION_TYPES
 	// bounded: set p = 1/N if p < 1/N and p = 1 - 1/N if p > 1 - 1/N

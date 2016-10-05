@@ -6,14 +6,14 @@
 class Result
 {
 	public:
-		Result(const Parameter& my_parameter, double* fitness_results, double* diversity_results);
+		Result(const Parameter& my_parameter, int* fitness_results, double* diversity_results);
 		~Result();
 
 		void calculateAverage();
 		
 		Parameter parameter;
 		
-		double* fitness;
+		int* fitness;
 		double* diversity;
 
 		double* fitness_q_14;

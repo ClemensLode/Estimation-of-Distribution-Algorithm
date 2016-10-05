@@ -60,7 +60,7 @@ std::string Parameter::print() const
 {
 	std::ostringstream os;
 	os << "Runs: " << testRuns << " Size:" << popSize << " Generations:" << maxGenerations << " Length:" << maxLength << " Selection:" << selection << " Random goalstring:" << randomOneMax << " Exact Random Distribution:" << useExactRandomDistribution << " Remember Remainder:" << rememberAndReuseSamplingError << " Correction:" << currentCorrection;
-	if(problemType == ONEMAX_TWO_PEAKS_PROBLEM)
+//	if(problemType == ONEMAX_TWO_PEAKS_PROBLEM)
 		os << " k:" << k;
 	return os.str();
 }
@@ -73,9 +73,6 @@ void Parameter::createNextParameter()
 	if(currentCorrection != 0)
 		return;
 	
-	if(test_bool(useExactRandomDistribution, useExactRandomDistributionSet, useExactRandomDistributionChange))
-		return;
-
         if(test_bool(rememberAndReuseSamplingError, rememberAndReuseSamplingErrorSet, rememberAndReuseSamplingErrorChange))
                 return;
 		
@@ -98,6 +95,9 @@ void Parameter::createNextParameter()
 		return;
 		
 	if(test_int(testRuns, minTestRuns, maxTestRuns, testRunsSteps))
+		return;
+
+	if(test_bool(useExactRandomDistribution, useExactRandomDistributionSet, useExactRandomDistributionChange))
 		return;
 }
 

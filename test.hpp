@@ -8,11 +8,11 @@ class Test
 		Test(const Parameter& my_parameter);
 		~Test();
 		void run();
-		double* getFitnessResults() const;
+		int* getFitnessResults() const;
 		double* getDiversityResults() const;
 	private:
 		Parameter parameter;
-		double* fitnessResults;
+		int* fitnessResults;
 		double* diversityResults;
 
 // Number of best individuals to select to create the distribution

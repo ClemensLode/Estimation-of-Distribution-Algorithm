@@ -15,6 +15,7 @@ class Individual
 
 //	protected:			
 		int fitness;
+		static int bestFitness;
 // maxLength is problem size
 		int maxLength;
 		

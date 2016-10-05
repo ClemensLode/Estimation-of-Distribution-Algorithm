@@ -2,6 +2,7 @@
 
 #include "onemax_individual.hpp"
 #include "onemax2_individual.hpp"
+#include "leading_individual.hpp"
 #include "haystack_individual.hpp"
 #include "nqueens_individual.hpp"
 
@@ -10,7 +11,7 @@
 #include <stdio.h>
 Test::Test(const Parameter& my_parameter):
 	parameter(my_parameter),
-	fitnessResults(new double[parameter.testRuns * parameter.maxGenerations]),
+	fitnessResults(new int[parameter.testRuns * parameter.maxGenerations]),
 	diversityResults(new double[parameter.testRuns * parameter.maxGenerations]),
 	N((double)parameter.popSize * parameter.selection)
 {}
@@ -30,6 +31,7 @@ void Test::run()
 
 	switch(parameter.problemType)
 	{
+		case LEADING_PROBLEM:
 		case NEEDLE_HAYSTACK_PROBLEM:
 		case ONEMAX_PROBLEM:
 			p = new double[parameter.maxLength];
@@ -76,9 +78,10 @@ void Test::run()
 // Initialize Population
 	Individual* individual[parameter.popSize];
 
+	printf("%s\n", parameter.print().c_str());
 	for(int z = 0; z < parameter.testRuns; z++)
 	{
-		printf("%i\n", z);
+//		printf("%i\n", z);
 		int generation = 0;
 // Reset generation, rounding error and distribution vector		
 		switch(parameter.problemType)
@@ -95,6 +98,13 @@ void Test::run()
 				for(int i = 0; i < parameter.popSize; i++)
 					individual[i] = new OneMax_Individual(parameter.maxLength);
 				break;
+			case LEADING_PROBLEM:
+				for(int i = 0; i < parameter.maxLength; i++)
+					p[i] = 0.5;
+				for(int i = 0; i < parameter.popSize; i++)
+					individual[i] = new Leading_Individual(parameter.maxLength);
+				break;
+
 			case ONEMAX_TWO_PEAKS_PROBLEM:
 				for(int i = 0; i < parameter.maxLength; i++)
 					p[i] = 0.5;
@@ -113,7 +123,7 @@ void Test::run()
 
 		for(int i = 0; i < parameter.popSize; i++)
 			individual[i]->createOnEstimatedDistribution(p);
-			
+		Individual::bestFitness = 0;
 		while(generation < parameter.maxGenerations)
 		{
 // calculate fitness and sort individuals, highest fitness first
@@ -127,7 +137,7 @@ void Test::run()
 					}
 			if(parameter.correction[parameter.currentCorrection] == TEST_CORRECTION)
 			{
-				fitnessResults[z * parameter.maxGenerations + generation] = 0.0;
+				fitnessResults[z * parameter.maxGenerations + generation] = 0;
 				if(generation == 0)
 					diversityResults[z * parameter.maxGenerations + generation] = 0.25;
 				else
@@ -140,7 +150,9 @@ void Test::run()
 					averageDiversity += p[i] * (1.0 - p[i]);
 				averageDiversity /= (double)parameter.maxLength;
 // record best fitness
-				fitnessResults[z * parameter.maxGenerations + generation] = individual[0]->calculateIndividualFitness();
+				if(Individual::bestFitness < individual[0]->calculateIndividualFitness())
+					Individual::bestFitness = individual[0]->calculateIndividualFitness();
+				fitnessResults[z * parameter.maxGenerations + generation] = Individual::bestFitness;
 				diversityResults[z * parameter.maxGenerations + generation] = averageDiversity;
 			}
 			generation++;
@@ -156,6 +168,7 @@ void Test::run()
 // Gather data from selected individuals
 			switch(parameter.problemType)
 			{
+				case LEADING_PROBLEM:
 				case ONEMAX_TWO_PEAKS_PROBLEM:
 				case NEEDLE_HAYSTACK_PROBLEM:
 				case ONEMAX_PROBLEM:
@@ -198,7 +211,7 @@ void Test::run()
 					}break;
 					case DIVERSITY_CORRECTION_LAPLACE:
 					{
-						p[i] = (p[i] + 1.0) / (N + 2.0);
+						p[i] = (p[i] + parameter.k) / (N + 2.0 * parameter.k);
 						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
 						double q;
 						if(p[i] < p1)
@@ -209,9 +222,23 @@ void Test::run()
 							q = 0.5;
 						p[i] = q;
 					}break;
-					case LAPLACE_REMEMBER_CORRECTION:p[i] = (p[i] + 2.0*oldp[i]) / (N + 2.0);
+					case DIVERSITY_CORRECTION_REMEMBER_LAPLACE:
+					{
+						p[i] = (p[i] + 2.0 * parameter.k * oldp[i]) / (N + 2.0 * parameter.k);
+						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
+						double q;
+						if(p[i] < p1)
+							q = 0.5 - c / 2.0;
+						else if(p[i] > p2)
+							q = 0.5 + c / 2.0;
+						else 
+							q = 0.5;
+						p[i] = q;
+					}break;
+
+					case LAPLACE_REMEMBER_CORRECTION:p[i] = (p[i] + 2.0 * parameter.k * oldp[i]) / (N + 2.0 * parameter.k);
 									 break;
-					case LAPLACE_CORRECTION:p[i] = (p[i] + 1.0) / (N + 2.0);break;
+					case LAPLACE_CORRECTION:p[i] = (p[i] + parameter.k) / (N + 2.0 * parameter.k);break;
 					case DIVERSITY_CORRECTION:
 					{
 						p[i] = p[i] / N;
@@ -304,6 +331,7 @@ void Test::run()
 
 	switch(parameter.problemType)
 	{
+		case LEADING_PROBLEM:
 		case NEEDLE_HAYSTACK_PROBLEM:
 		case ONEMAX_PROBLEM:delete Individual::goalString;break;
 		case ONEMAX_TWO_PEAKS_PROBLEM:break;
@@ -315,7 +343,7 @@ void Test::run()
 	delete rounded_number;
 }
 
-double* Test::getFitnessResults() const
+int* Test::getFitnessResults() const
 {
 	return fitnessResults;
 }

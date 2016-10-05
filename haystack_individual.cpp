@@ -20,6 +20,8 @@ Haystack_Individual::~Haystack_Individual()
 
 int Haystack_Individual::calculateIndividualFitness()
 {
+	return 0;
+	/*
 	// ?
 //	if(solutionFound)
 //		fitness = maxLength;
@@ -36,7 +38,7 @@ int Haystack_Individual::calculateIndividualFitness()
 //			solutionFound = 1;
 	}
 	fitness = 0;
-	return(fitness);	
+	return(fitness);	*/
 }
 
 
