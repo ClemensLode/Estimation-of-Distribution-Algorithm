@@ -48,6 +48,8 @@ std::string Parameter::correctionString[MAX_CORRECTION_TYPES] = {
 	"EDC+BC",
 	
 	"EDC+LRC+BC",
+	"ED+AV+BC",
+	"EDC+AV+BC",
 	
 	"(1-1/N) loss",
 	"(M*(N-1)/(N*(M-1)) loss"
@@ -73,6 +75,8 @@ std::string Parameter::correctionBaseName[MAX_CORRECTION_TYPES] = {
 	"exact_distribution_boundary",
 	
 	"edc_lrc_boundary",
+	"ed_av_boundary",
+	"edc_av_boundary",
 	
 	"standard_loss_no"
 };
@@ -152,6 +156,12 @@ const bool Parameter::isStartConfiguration() const
 			currentCorrection == 0 );
 }
 
+bool Parameter::isAverageCorrection(eCorrectionType correction_type)
+{
+	return((correction_type == EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION));
+}
+
 bool Parameter::isNoCorrection(eCorrectionType correction_type)
 {
 	return((correction_type == NO_CORRECTION_RANDOM_DISTRIBUTION) ||
@@ -177,7 +187,9 @@ bool Parameter::isLaplaceRemember(eCorrectionType correction_type)
 		   (correction_type == LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION) ||
 		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION) ||
 		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
-		   (correction_type == EDC_LRC_BC));
+		   (correction_type == EDC_LRC_BC) ||
+		   (correction_type == EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION));
 }
 
 bool Parameter::isExactDistribution(eCorrectionType correction_type)
@@ -189,7 +201,9 @@ bool Parameter::isExactDistribution(eCorrectionType correction_type)
 		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
 		   (correction_type == EXACT_DISTRIBUTION_CORRECTION) ||
 		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
-		   (correction_type == EDC_LRC_BC));
+		   (correction_type == EDC_LRC_BC) ||
+		   (correction_type == EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION));
 }
 
 bool Parameter::isBoundaryCorrection(eCorrectionType correction_type)
@@ -203,7 +217,9 @@ bool Parameter::isBoundaryCorrection(eCorrectionType correction_type)
 		   (correction_type == RANDOM_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
 		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
 		   
-		   (correction_type == EDC_LRC_BC));
+		   (correction_type == EDC_LRC_BC) ||
+		   (correction_type == EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION));
 }
 
 bool Parameter::isDistributionCorrection(eCorrectionType correction_type)
@@ -212,7 +228,9 @@ bool Parameter::isDistributionCorrection(eCorrectionType correction_type)
 		   (correction_type == RANDOM_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||	
 		   (correction_type == EXACT_DISTRIBUTION_CORRECTION) ||
 		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
-		   (correction_type == EDC_LRC_BC));
+		   (correction_type == EDC_LRC_BC) ||
+		   (correction_type == EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION));		   
 }
 
 
@@ -228,6 +246,8 @@ std::string Parameter::print() const
 		os << " alpha:" << laplace_alpha;
 	if(isBoundaryCorrection(correction[currentCorrection]))
 		os << " beta:" << bounded_beta;
+	if(isAverageCorrection(correction[currentCorrection]))
+		os << " gamma:" << average_gamma;
 	return os.str();
 }
 
@@ -236,10 +256,14 @@ void Parameter::createNextParameter()
 	currentCorrection++;
 	if(currentCorrection >= correctionCount)
 		currentCorrection = 0;
+
 	if(isLaplace(correction[currentCorrection]))
 		test_double(laplace_alpha, minlaplace_alpha, maxlaplace_alpha, laplace_alphaSteps);
 	if(isBoundaryCorrection(correction[currentCorrection]))
 		test_double(bounded_beta, minbounded_beta, maxbounded_beta, bounded_betaSteps);
+	if(isAverageCorrection(correction[currentCorrection]))
+		test_double(average_gamma, minaverage_gamma, maxaverage_gamma, average_gammaSteps);
+		
 	test_double(selection, minselection, maxselection, selectionSteps);
 	
 	if(currentCorrection != 0)
@@ -247,10 +271,10 @@ void Parameter::createNextParameter()
 	
 	if(((problemType == ONEMAX_TWO_PEAKS_PROBLEM) || (problemType == NK_PROBLEM)) && (test_int(k, mink, maxk, kSteps)))
 		return;
-	
+
 	if(test_bool(randomOneMax, randomOneMaxSet, randomOneMaxChange))
 		return;
-		
+
 	if(test_int(maxLength, minMaxLength, maxMaxLength, maxLengthSteps))
 		return;
 
@@ -259,7 +283,7 @@ void Parameter::createNextParameter()
 
 	if(test_log_int(popSize, popSizeStepNr, minPopSize, maxPopSize, popSizeSteps))
 		return;
-		
+
 	if(test_int(testRuns, minTestRuns, maxTestRuns, testRunsSteps))
 		return;
 }
@@ -321,6 +345,13 @@ void Parameter::setBoundedBeta(double min, double max, int steps)
 	maxbounded_beta = max;
 	bounded_betaSteps = steps;
 }
+void Parameter::setAverageGamma(double min, double max, int steps)
+{
+	average_gamma = min;
+	minaverage_gamma = min;
+	maxaverage_gamma = max;
+	average_gammaSteps = steps;
+}
 
 void Parameter::setSelection(double min, double max, int steps) 
 {
@@ -340,6 +371,14 @@ void Parameter::setRandomOneMax(bool set, bool change)
 void Parameter::testCorrectionType(eCorrectionType set)
 {
 	for(int i = 0; i < selectionSteps; i++)
+	if(isAverageCorrection(set))
+	{
+		for(int i = 0; i < average_gammaSteps; i++)
+		{
+			correction[correctionCount] = set;						
+			correctionCount++;
+		}
+	} else
 	if(isLaplace(set))
 	{
 		for(int i = 0; i < laplace_alphaSteps; i++)

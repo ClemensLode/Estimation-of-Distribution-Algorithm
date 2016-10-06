@@ -49,6 +49,9 @@ enum eCorrectionType
 	
 	EDC_LRC_BC,
 	
+	EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION,
+	EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION,
+	
 	TEST_CORRECTION, // just a reduction of variance by 1 - 1/n to compare
 	EXACT_TEST_CORRECTION, // reduction of variance by M*(N-1) / (N * (M-1))
 	
@@ -74,13 +77,14 @@ class Parameter
 		static std::string correctionString[MAX_CORRECTION_TYPES];
 		static std::string problemDescription[MAX_PROBLEM_TYPES];
 		static std::string problemBaseName[MAX_PROBLEM_TYPES];	
-			
+
 		static bool isNoCorrection(eCorrectionType correction_type);
 		static bool isLaplace(eCorrectionType correction_type);
 		static bool isLaplaceRemember(eCorrectionType correction_type);
 		static bool isBoundaryCorrection(eCorrectionType correction_type);
 		static bool isExactDistribution(eCorrectionType correction_type);
 		static bool isDistributionCorrection(eCorrectionType correction_type);
+		static bool isAverageCorrection(eCorrectionType correction_type);
 		eProblemType problemType;
 
 // number of similar test runs, 24 in order to fit on a standard windows terminal
@@ -119,6 +123,12 @@ class Parameter
 		double minbounded_beta, maxbounded_beta;
 		int bounded_betaSteps;
 		void setBoundedBeta(double min, double max, int steps);
+		
+// const for Average
+		double average_gamma;
+		double minaverage_gamma, maxaverage_gamma;
+		int average_gammaSteps;
+		void setAverageGamma(double min, double max, int steps);
 	
 // Percentage of individuals to select for the distribution
 		double selection;

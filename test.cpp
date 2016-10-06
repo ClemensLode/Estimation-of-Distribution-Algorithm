@@ -139,17 +139,20 @@ void Test::run()
 					p[i] = p[i] / (double)N;
 				else if(correction_type == EDC_LRC_BC)
 				{
-//					p[i] = p[i] / (double)N;
 					p[i] = distributionCorrection(p[i] / (double)N, p1, p2, n);
-					p[i] = laplaceRememberDistributionCorrection(oldp[i], p[i]);
-				}
+					p[i] = laplaceRememberCorrection(oldp[i], p[i] * (double)N);
+				} 
 				else if(parameter.isLaplaceRemember(correction_type))
 					p[i] = laplaceRememberCorrection(oldp[i], p[i]);
 				else if(parameter.isLaplace(correction_type))
 					p[i] = laplaceCorrection(p[i]);
 				else if(parameter.isDistributionCorrection(correction_type))
 					p[i] = distributionCorrection(p[i] / (double)N, p1, p2, n);
-					
+				
+				if(parameter.isAverageCorrection(correction_type))
+				{
+					p[i] = averageCorrection(oldp[i], p[i]);
+				}	
 				if(parameter.isBoundaryCorrection(correction_type))
 					p[i] = boundaryCorrection(p[i]);
 			} // end for(int i = 0; i < parameter.maxLength; i++)
@@ -249,9 +252,9 @@ double Test::laplaceCorrection(double k)
 	return ( k + parameter.laplace_alpha) / ((double)N + 2.0*parameter.laplace_alpha);
 }
 
-double Test::laplaceRememberDistributionCorrection(double oldp, double p)
+double Test::averageCorrection(double oldp, double p)
 {
-	return ((p + oldp) / 2.0);
+	return ((p + parameter.average_gamma * oldp) / (1.0 + parameter.average_gamma));
 }
 
 double Test::laplaceRememberCorrection(double oldp, double k)

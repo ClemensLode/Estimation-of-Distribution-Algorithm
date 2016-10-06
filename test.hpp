@@ -28,7 +28,7 @@ class Test
 // Both Laplace correction methods need the raw number of '1's of the selected population as parameter
 		double laplaceCorrection(double k);
 		double laplaceRememberCorrection(double oldp, double k);
-		double laplaceRememberDistributionCorrection(double oldp, double k);
+		double averageCorrection(double oldp, double p);
 	private:
 		Parameter parameter;
 		double* fitnessResults;

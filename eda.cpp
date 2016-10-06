@@ -28,20 +28,26 @@ int main()
 	Parameter parameter;
 // to compare BoundedBeta and LaplaceAlpha at the boundaries, use beta = alpha / (population_size * selection + 2 alpha)
 
-	parameter.setLaplaceAlpha(1.0, 1.0, 1);
+// only one of these three can be set to multiple steps
+	parameter.setLaplaceAlpha(0.0, 0.25, 6);
 // beta = 0.1 / 25.1 (pop = 50)
 // beta = 0.1 / 5.1  (pop = 10)
 	parameter.setBoundedBeta(0.01, 0.01, 1);
+// sets the ratio of the previous generation compared to the current generation when averaging the distribution vector
+// 0.5 means that the previous generation counts 1/3, 2.0 means that the previous generation counts 2/3
+	parameter.setAverageGamma(1.0, 1.0, 1);
+
 // selection should be set to (int)(popSize*selection) > 1 and (int)(popSize*selection) < popSize in order for correction methods to work
 	parameter.setSelection(0.5, 0.5, 1);
-
+	parameter.setRandomOneMax(true, false);
+	
 //	parameter.testCorrectionType(NO_CORRECTION_RANDOM_DISTRIBUTION);
 //	parameter.testCorrectionType(NO_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION);
 //	parameter.testCorrectionType(NO_CORRECTION_EXACT_DISTRIBUTION);
-	parameter.testCorrectionType(NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION);
+//	parameter.testCorrectionType(NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION);
 
 //	parameter.testCorrectionType(LAPLACE_CORRECTION_RANDOM_DISTRIBUTION);
-//	parameter.testCorrectionType(LAPLACE_CORRECTION_EXACT_DISTRIBUTION);
+	parameter.testCorrectionType(LAPLACE_CORRECTION_EXACT_DISTRIBUTION);
 
 //	parameter.testCorrectionType(LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION);
 //	parameter.testCorrectionType(LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION);
@@ -51,14 +57,16 @@ int main()
 //	parameter.testCorrectionType(RANDOM_DISTRIBUTION_CORRECTION);
 //	parameter.testCorrectionType(RANDOM_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION);
 //	parameter.testCorrectionType(EXACT_DISTRIBUTION_CORRECTION);
-	parameter.testCorrectionType(EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION);
+//	parameter.testCorrectionType(EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION);
 
-	parameter.testCorrectionType(EDC_LRC_BC);
+//	parameter.testCorrectionType(EDC_LRC_BC);
+//	parameter.testCorrectionType(EXACT_DISTRIBUTION_AVERAGE_BOUNDARY_CORRECTION);
+//	parameter.testCorrectionType(EXACT_DISTRIBUTION_CORRECTION_AVERAGE_BOUNDARY_CORRECTION);		
 	
 //	parameter.testCorrectionType(TEST_CORRECTION);
 //	parameter.testCorrectionType(EXACT_TEST_CORRECTION);
 	
-	parameter.setRandomOneMax(true, false);
+
 // => N
 
 // important! without this 00000 will be harder to archieve than 1111 because of rounding... mmmh... (randomOneMax)
@@ -66,18 +74,19 @@ int main()
 // Wahrscheinlich wird p so veraendert, dass es langsam richtig 1 geht, unabhaengig von der tatsaechlichen Loesung.
 
 	parameter.setTestRuns(50, 50, 0);
-	parameter.setPopSize(30, 30, 0);
+	parameter.setPopSize(10, 30, 2);
 	parameter.setk(100, 100, 0);
+	
 	
 //	parameter.problemType = FLAT_PROBLEM;
 //	parameter.problemType = ONEMAX_PROBLEM;
 //	parameter.problemType = ONEMAX_TWO_PEAKS_PROBLEM;
 //	parameter.problemType = NEEDLE_HAYSTACK_PROBLEM;
-	parameter.problemType = LEADING_PROBLEM;
+//	parameter.problemType = LEADING_PROBLEM;
 //	parameter.problemType = SCHAFFER_PROBLEM;	
 //	parameter.problemType = PLATEAU_PROBLEM;		
 //	parameter.problemType = FLAT_PROBLEM;
-//	parameter.problemType = NK_PROBLEM;
+	parameter.problemType = NK_PROBLEM;
 //	parameter.problemType = PACKING_PROBLEM;
 
 	switch(parameter.problemType)
@@ -88,10 +97,10 @@ int main()
 			break;
 		case ONEMAX_PROBLEM:
 			parameter.setMaxGenerations(100, 100, 0);
-			parameter.setMaxLength(200, 200, 0);
+			parameter.setMaxLength(300, 300, 0);
 			break;
 		case ONEMAX_TWO_PEAKS_PROBLEM:
-			parameter.setMaxGenerations(100, 100, 0);
+			parameter.setMaxGenerations(200, 200, 0);
 			parameter.setMaxLength(500, 500, 0);
 			parameter.setk(100, 100, 0);
 			break;
@@ -313,6 +322,12 @@ int main()
 		{
 			os << ", b=" << parameter.bounded_beta;
 			Parameter::test_double(parameter.bounded_beta, parameter.minbounded_beta, parameter.maxbounded_beta, parameter.bounded_betaSteps);						
+		}	
+
+		if(Parameter::isAverageCorrection(parameter.correction[i]))
+		{
+			os << ", g=" << parameter.average_gamma;
+			Parameter::test_double(parameter.average_gamma, parameter.minaverage_gamma, parameter.maxaverage_gamma, parameter.average_gammaSteps);						
 		}	
 
 		if(parameter.selectionSteps>1)
