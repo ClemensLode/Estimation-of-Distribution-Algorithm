@@ -24,7 +24,7 @@ int Haystack_Individual::calculateIndividualFitness()
 	{
 		fitness = maxLength;
 		for(int i = 0; i < maxLength; i++)
-			if(bitstring[i] != goalString[i])
+			if(bitstring[i] != currentGoalString[i])
 			{
 				fitness = 0;
 				break;

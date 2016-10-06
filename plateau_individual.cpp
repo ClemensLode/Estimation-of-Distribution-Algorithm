@@ -8,7 +8,9 @@ Plateau_Individual::~Plateau_Individual()
 {}
 
 void Plateau_Individual::reset()
-{}
+{
+	
+}
 
 int Plateau_Individual::calculateIndividualFitness()
 {
@@ -16,9 +18,9 @@ int Plateau_Individual::calculateIndividualFitness()
 	{
 		fitness = 0;
 		for(int i = 0; i < maxLength-2; i+=3)
-			if((bitstring[i] == bitstring[i+1])&&
-			   (bitstring[i+1] == bitstring[i+2])&&
-			   (bitstring[i+2] == 1))
+			if( (bitstring[i] == currentGoalString[i]) &&
+			    (bitstring[i+1] == currentGoalString[i+1]) &&
+			    (bitstring[i+2] == currentGoalString[i+2]) )
 				fitness++;
 	}
 	return(fitness);	

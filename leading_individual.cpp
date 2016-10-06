@@ -16,7 +16,7 @@ int Leading_Individual::calculateIndividualFitness()
 	{
 		fitness = 0;
 		int i = 0;
-		while((i < maxLength) && (bitstring[i] == goalString[i]))
+		while((i < maxLength) && (bitstring[i] == currentGoalString[i]))
 		//1))
 		{
 			fitness++;

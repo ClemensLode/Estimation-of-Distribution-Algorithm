@@ -9,7 +9,7 @@ Test::Test(const Parameter& my_parameter):
 	parameter(my_parameter),
 	fitnessResults(new double[parameter.testRuns * parameter.maxGenerations]),
 	diversityResults(new double[parameter.testRuns * parameter.maxGenerations]),
-	N((double)parameter.popSize * parameter.selection)
+	N((int)((double)parameter.popSize * parameter.selection))
 {}
 
 Test::~Test()
@@ -22,81 +22,16 @@ void Test::run()
 // The distribution vector
 	double* p = new double[parameter.maxLength];
 
-	switch(parameter.problemType)
-	{
-		case NEEDLE_HAYSTACK_PROBLEM:
-		case ONEMAX_PROBLEM:
-		case LEADING_PROBLEM:			
-			Individual::goalString = new int[parameter.maxLength];
-			if(parameter.randomOneMax)
-			{
-				for(int i = 0; i < parameter.maxLength; i++)
-					Individual::goalString[i] = rand()%2;
-			}
-			else 
-				for(int i = 0; i < parameter.maxLength; i++)
-					Individual::goalString[i] = 1;
-			break;
-// special handling 
-		case FLAT_PROBLEM:
-		case SCHAFFER_PROBLEM:
-		case ONEMAX_TWO_PEAKS_PROBLEM:break;
-		case NK_PROBLEM:
-			break;
-		default:break;
-	}
 	double p1, p2, n;
-	bool calc_p12;
 	bool use_exact_distribution = false;
 	double* oldp = NULL;
-	switch(parameter.correction[parameter.currentCorrection])
-	{
-		case NO_CORRECTION_EXACT_DISTRIBUTION:
-		case NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;
-			break;
-		case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION:
-		case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;
-		case DIVERSITY_CORRECTION:
-		case DIVERSITY_CORRECTION_BOUNDED:
-				n = ((double)(parameter.popSize) - 1.0)*N / ((N - 1.0)*(double)parameter.popSize);
-				calc_p12 = true;
-				break;
-		case LAPLACE_CORRECTION_EXACT_DISTRIBUTION:
-			use_exact_distribution = true;
-		case LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION:
-		case LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;				
-		case LAPLACE_REMEMBER_CORRECTION:
-		case LAPLACE_REMEMBER_CORRECTION_BOUNDED:
-			oldp = new double[parameter.maxLength];
-			break;				
-		case EXACT_CORRECTION_EXACT_DISTRIBUTION:
-		case EXACT_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;
-		case EXACT_CORRECTION:
-		case EXACT_CORRECTION_BOUNDED:			
-				n = ((double)N / (double)(N - 1.0));
-				calc_p12 = true;
-				break;
-		default:calc_p12 = false;
-				break;
-	}
+	eCorrectionType correction_type = parameter.correction[parameter.currentCorrection];
 
-	if(calc_p12)
-	{
-// p1, p2 are the lower and upper border of our function
-		p1 = 0.5 - sqrt(1.0 - 1.0/n) / 2.0;
-		p2 = 0.5 + sqrt(1.0 - 1.0/n) / 2.0;
-		if(p1 > p2)
-		{
-			double tmp = p1;
-			p1 = p2;
-			p2 = tmp;
-		}
-	}
-	
+	init_values(correction_type, p1, p2, n, use_exact_distribution);
+
+	if(parameter.isLaplaceRemember(correction_type))
+		oldp = new double[parameter.maxLength];
+
 // Initialize Population
 	Individual* individual[parameter.popSize];
 
@@ -105,44 +40,23 @@ void Test::run()
 	Individual::k = parameter.k;
 	switch(parameter.problemType)
 	{
-		case FLAT_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new Flat_Individual();
-			break;
-		case NEEDLE_HAYSTACK_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new Haystack_Individual();
-			break;
-		case ONEMAX_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new OneMax_Individual();
-			break;
-		case ONEMAX_TWO_PEAKS_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new OneMax2_Individual();
-			break;
-		case LEADING_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new Leading_Individual();
-			break;
-		case SCHAFFER_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new Schaffer_Individual();
-			break;
-		case PLATEAU_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new Plateau_Individual();
-			break;			
-		case NK_PROBLEM:
-			for(int i = 0; i < parameter.popSize; i++)
-				individual[i] = new NK_Individual();
-			break;
+		case FLAT_PROBLEM:				for(int i = 0; i < parameter.popSize; i++) individual[i] = new Flat_Individual();break;
+		case NEEDLE_HAYSTACK_PROBLEM:	for(int i = 0; i < parameter.popSize; i++) individual[i] = new Haystack_Individual();break;
+		case ONEMAX_PROBLEM:			for(int i = 0; i < parameter.popSize; i++) individual[i] = new OneMax_Individual();break;
+		case ONEMAX_TWO_PEAKS_PROBLEM:	for(int i = 0; i < parameter.popSize; i++) individual[i] = new OneMax2_Individual();break;
+		case LEADING_PROBLEM:			for(int i = 0; i < parameter.popSize; i++) individual[i] = new Leading_Individual();break;
+		case SCHAFFER_PROBLEM:			for(int i = 0; i < parameter.popSize; i++) individual[i] = new Schaffer_Individual();break;
+		case PLATEAU_PROBLEM:			for(int i = 0; i < parameter.popSize; i++) individual[i] = new Plateau_Individual();break;			
+		case NK_PROBLEM:				for(int i = 0; i < parameter.popSize; i++) individual[i] = new NK_Individual();break;
+		case PACKING_PROBLEM:			for(int i = 0; i < parameter.popSize; i++) individual[i] = new Packing_Individual();break;
 		default:break;
 	}
 
 	for(int z = 0; z < parameter.testRuns; z++)
 	{
-		Individual::run = z;
+		Individual::currentRunNumber = z;
+		Individual::currentGoalString = &Individual::goalString[z * parameter.maxLength];
+		
 		printf(".");
 		int generation = 0;
 		for(int i = 0; i < parameter.maxLength; i++)
@@ -153,10 +67,11 @@ void Test::run()
 			individual[i]->reset();
 			individual[i]->createOnEstimatedDistribution(p);
 		}
-			
+	
+		double best_fitness = 0.0;			
 		while(generation < parameter.maxGenerations)
 		{
-			// we need no sorting with a flat fitness landscape
+// we need no sorting of fitness with a flat fitness landscape
 			if(parameter.problemType != FLAT_PROBLEM)
 			{
 // calculate fitness and sort individuals, highest fitness first
@@ -171,31 +86,38 @@ void Test::run()
 						}
 					}
 			}
+			if(individual[0]->calculateIndividualFitness() > best_fitness)
+				best_fitness = individual[0]->calculateIndividualFitness();
 				
-			if(parameter.correction[parameter.currentCorrection] == TEST_CORRECTION)
+			if(correction_type == EXACT_TEST_CORRECTION)
 			{
 				fitnessResults[z * parameter.maxGenerations + generation] = 0.0;
 				if(generation == 0)
 					diversityResults[z * parameter.maxGenerations + generation] = 0.25;
 				else
 					diversityResults[z * parameter.maxGenerations + generation] = 
-						diversityResults[z * parameter.maxGenerations + generation-1] * (double)(1.0 - 1.0 / N);
+						diversityResults[z * parameter.maxGenerations + generation-1] * (double)((parameter.popSize*(N-1))/(double)(N*(parameter.popSize-1)));
+			} else
+			if(correction_type == TEST_CORRECTION)
+			{
+				fitnessResults[z * parameter.maxGenerations + generation] = 0.0;
+				if(generation == 0)
+					diversityResults[z * parameter.maxGenerations + generation] = 0.25;
+				else
+					diversityResults[z * parameter.maxGenerations + generation] = 
+						diversityResults[z * parameter.maxGenerations + generation-1] * (double)(1.0 - 1.0 / (double)N);
 			} else
 			{
 				double averageDiversity = 0.0;
 				for(int i = 0; i < parameter.maxLength; i++)
 					averageDiversity += p[i] * (1.0 - p[i]);
 				averageDiversity /= (double)parameter.maxLength;
-// record best fitness
-				fitnessResults[z * parameter.maxGenerations + generation] = individual[0]->calculateIndividualFitness();
+// record best fitness for graph drawing
+				fitnessResults[z * parameter.maxGenerations + generation] = best_fitness;
 				diversityResults[z * parameter.maxGenerations + generation] = averageDiversity;
 			}
 			generation++;
-
-			if((parameter.correction[parameter.currentCorrection] == LAPLACE_REMEMBER_CORRECTION)||
-				(parameter.correction[parameter.currentCorrection] == LAPLACE_REMEMBER_CORRECTION_BOUNDED)||
-				(parameter.correction[parameter.currentCorrection] == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION)||
-				(parameter.correction[parameter.currentCorrection] == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED))				
+			if(parameter.isLaplaceRemember(correction_type))
 			{
 				for(int i = 0; i < parameter.maxLength; i++)
 					oldp[i] = p[i];
@@ -205,93 +127,31 @@ void Test::run()
 // Just UMDA, don't take distribution from last iteration into account
 			for(int i = 0; i < parameter.maxLength; i++)
 				p[i] = 0.0;		
-			for(int i = (int)N; i--;)
+			for(int i = N; i--;)
 			{
 				for(int j = 0; j < parameter.maxLength; j++)
 					p[j] += individual[i]->bitstring[j];
 			}
-			
+		
 			for(int i = 0; i < parameter.maxLength; i++)
 			{
-				switch(parameter.correction[parameter.currentCorrection])
+				if(parameter.isNoCorrection(correction_type))
+					p[i] = p[i] / (double)N;
+				else if(correction_type == EDC_LRC_BC)
 				{
-					case NO_CORRECTION:
-					case NO_CORRECTION_EXACT_DISTRIBUTION:
-						p[i] = p[i] / N; break;
-					case NO_CORRECTION_BOUNDED:
-					case NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-					{
-						p[i] = p[i] / N;
-						double min = parameter.bounded_beta;//1.0 / N;
-						if(p[i] < min)
-							p[i] = min;
-						else if(p[i] > 1.0 - min)
-							p[i] = 1.0 - min;
-					}break;
-					
-					case LAPLACE_CORRECTION:
-					case LAPLACE_CORRECTION_EXACT_DISTRIBUTION:						
-						p[i] = (p[i] + parameter.laplace_alpha) / (N + 2.0*parameter.laplace_alpha);
-						break;
-
-					case LAPLACE_REMEMBER_CORRECTION:
-					case LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION:
-						p[i] = (p[i] + 2.0 * oldp[i] * parameter.laplace_alpha) / (N + 2.0 * parameter.laplace_alpha); 
-						break;
-						
-					case LAPLACE_REMEMBER_CORRECTION_BOUNDED:
-					case LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-					{
-						p[i] = (p[i] + 2.0 * oldp[i] * parameter.laplace_alpha) / (N + 2.0 * parameter.laplace_alpha);
-						double min = parameter.bounded_beta;//1.0 / N;
-						if(p[i] < min)
-							p[i] = min;
-						else if(p[i] > 1.0 - min)
-							p[i] = 1.0 - min;
-					}break;						
-					
-					case EXACT_CORRECTION:
-					case EXACT_CORRECTION_EXACT_DISTRIBUTION:
-					case DIVERSITY_CORRECTION:
-					case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION:
-					{
-						p[i] = p[i] / N;
-						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
-						double q;
-						if(p[i] < p1)
-							q = 0.5 - c / 2.0;
-						else if(p[i] > p2)
-							q = 0.5 + c / 2.0;
-						else 
-							q = 0.5;
-						p[i] = q;
-					}break;
-					case EXACT_CORRECTION_BOUNDED:
-					case EXACT_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-					case DIVERSITY_CORRECTION_BOUNDED:
-					case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:	
-					{
-						p[i] = p[i] / N;
-						double c = sqrt(1.0 - 4.0 * p[i] * (1.0 - p[i]) * n);
-						double q;
-						if(p[i] < p1)
-							q = 0.5 - c / 2.0;
-						else if(p[i] > p2)
-							q = 0.5 + c / 2.0;
-						else 
-							q = 0.5;
-						double min = parameter.bounded_beta;//1.0 / N;
-						if(q < min)
-							q = min;
-						else if(q > 1.0 - min)
-							q = 1.0 - min;
-						p[i] = q;
-					}break;
-					case TEST_CORRECTION:
-						p[i] = 0.5;
-					break;
-					default:break;
+//					p[i] = p[i] / (double)N;
+					p[i] = distributionCorrection(p[i] / (double)N, p1, p2, n);
+					p[i] = laplaceRememberDistributionCorrection(oldp[i], p[i]);
 				}
+				else if(parameter.isLaplaceRemember(correction_type))
+					p[i] = laplaceRememberCorrection(oldp[i], p[i]);
+				else if(parameter.isLaplace(correction_type))
+					p[i] = laplaceCorrection(p[i]);
+				else if(parameter.isDistributionCorrection(correction_type))
+					p[i] = distributionCorrection(p[i] / (double)N, p1, p2, n);
+					
+				if(parameter.isBoundaryCorrection(correction_type))
+					p[i] = boundaryCorrection(p[i]);
 			} // end for(int i = 0; i < parameter.maxLength; i++)
 
 		// create new population
@@ -329,21 +189,6 @@ void Test::run()
 
 	for(int i = 0; i < parameter.popSize; i++)
 		delete individual[i];
-
-		
-	switch(parameter.problemType)
-	{
-		case LEADING_PROBLEM:
-		case NEEDLE_HAYSTACK_PROBLEM:
-		case ONEMAX_PROBLEM:delete Individual::goalString;break;
-		case SCHAFFER_PROBLEM:
-		case PLATEAU_PROBLEM:
-		case FLAT_PROBLEM:
-		case ONEMAX_TWO_PEAKS_PROBLEM:
-		case NK_PROBLEM:
-			break;
-		default:break;
-	}
 	delete oldp;
 	delete p;
 }
@@ -358,45 +203,14 @@ double* Test::getDiversityResults() const
 	return diversityResults;
 }
 
-void Test::init_values(eCorrectionType correction_type, double &p1, double &p2, double &n, double* oldp, bool &calc_p12, bool &use_exact_distribution)
+void Test::init_values(eCorrectionType correction_type, double &p1, double &p2, double &n, bool &use_exact_distribution)
 {
-	switch(correction_type)
-	{
-		case NO_CORRECTION_EXACT_DISTRIBUTION:
-		case NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;
-			break;
-		case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION:
-		case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;
-		case DIVERSITY_CORRECTION:
-		case DIVERSITY_CORRECTION_BOUNDED:
-				n = ((double)(parameter.popSize) - 1.0)*N / ((N - 1.0)*(double)parameter.popSize);
-				calc_p12 = true;
-				break;
-		case LAPLACE_CORRECTION_EXACT_DISTRIBUTION:
-			use_exact_distribution = true;
-		case LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION:
-		case LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;				
-		case LAPLACE_REMEMBER_CORRECTION:
-		case LAPLACE_REMEMBER_CORRECTION_BOUNDED:
-			oldp = new double[parameter.maxLength];
-			break;				
-		case EXACT_CORRECTION_EXACT_DISTRIBUTION:
-		case EXACT_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-			use_exact_distribution = true;
-		case EXACT_CORRECTION:
-		case EXACT_CORRECTION_BOUNDED:			
-				n = ((double)N / (double)(N - 1.0));
-				calc_p12 = true;
-				break;
-		default:calc_p12 = false;
-				break;
-	}
+	if(parameter.isExactDistribution(correction_type))
+		use_exact_distribution = true;
 
-	if(calc_p12)
+	if(parameter.isDistributionCorrection(correction_type))
 	{
+		n = (double)((parameter.popSize - 1)*N) / (double)((N - 1)*parameter.popSize);
 // p1, p2 are the lower and upper border of our function
 		p1 = 0.5 - sqrt(1.0 - 1.0/n) / 2.0;
 		p2 = 0.5 + sqrt(1.0 - 1.0/n) / 2.0;
@@ -409,16 +223,50 @@ void Test::init_values(eCorrectionType correction_type, double &p1, double &p2, 
 	}
 }
 
-void Test::printDistributionCorrection(std::string basename, std::string title, eCorrectionType correction_type, double k)
+double Test::boundaryCorrection(double p)
 {
-	if((correction_type == LAPLACE_REMEMBER_CORRECTION)||
-		(correction_type == LAPLACE_REMEMBER_CORRECTION_BOUNDED)||
-		(correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION)||
-		(correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED))				
-			return;
+	if(p < parameter.bounded_beta)
+		return parameter.bounded_beta;
+	else if(p > 1.0 - parameter.bounded_beta)
+		return 1.0 - parameter.bounded_beta;
+	else return p;
+}
+
+double Test::distributionCorrection(double p, double p1, double p2, double n)
+{
+	double c = sqrt(1.0 - 4.0 * p * (1.0 - p) * n);
+	if(p < p1)
+		return 0.5 - c / 2.0;
+	else if(p > p2)
+		return 0.5 + c / 2.0;
+	else 
+		return 0.5;
+}
+
+// Both Laplace correction methods need the raw number of '1's of the selected population as parameter
+double Test::laplaceCorrection(double k)
+{
+	return ( k + parameter.laplace_alpha) / ((double)N + 2.0*parameter.laplace_alpha);
+}
+
+double Test::laplaceRememberDistributionCorrection(double oldp, double p)
+{
+	return ((p + oldp) / 2.0);
+}
+
+double Test::laplaceRememberCorrection(double oldp, double k)
+{
+	return ( k + 2.0 * oldp * parameter.laplace_alpha) / ((double)N + 2.0 * parameter.laplace_alpha); 
+}
+
+void Test::printDistributionCorrection(eCorrectionType correction_type)
+{
+	// laplace remember graph would need a 3d graph, TODO maybe implement later
+//	if(parameter.isLaplaceRemember(correction_type))
+//		return;
 	
 	FILE* f;
-	std::string real_basename = "graph_" + basename + "_correction";
+	std::string real_basename = "graph_" + Parameter::correctionBaseName[correction_type] + "_correction";
 	std::string data_file_name = real_basename + ".gnp";
 	std::string gnuplot_file_name = real_basename + ".plt";
 	if ((f = fopen(("graph_correction/" + data_file_name).c_str(), "w")) == NULL)
@@ -426,85 +274,28 @@ void Test::printDistributionCorrection(std::string basename, std::string title, 
 	else
 	{
 		double p1, p2, n;
-		bool calc_p12;
 		bool use_exact_distribution = false;
-		double* oldp = NULL;
-		init_values(correction_type, p1, p2, n, oldp, calc_p12, use_exact_distribution);
-		delete oldp;
-		fprintf(f, "0.0 0.0\n");
-		const double N = parameter.popSize / 2.0;
-		for(int z = 0; z <= 1000; z++)
+		init_values(correction_type, p1, p2, n, use_exact_distribution);
+		const int N = parameter.popSize / 2;
+		
+		for(int z = 0; z <= 100; z++)
 		{
-			double t = (double)z/1000.0;
-			double p = N*t;
+			double t = (double)z/100.0;
+			double p = t*(double)N;
+			if(parameter.isNoCorrection(correction_type))
+				p = p / (double)N;
+			else if(parameter.isLaplaceRemember(correction_type))				
+				p = laplaceRememberCorrection(0.25, p);
+			else if(parameter.isLaplace(correction_type))
+				p = laplaceCorrection(p);
+			else if(parameter.isDistributionCorrection(correction_type))
+				p = distributionCorrection(p / (double)N, p1, p2, n);
+			if(parameter.isBoundaryCorrection(correction_type))
+				p = boundaryCorrection(p);
 
-			switch(correction_type)
-			{
-				case NO_CORRECTION:
-				case NO_CORRECTION_EXACT_DISTRIBUTION:
-					p = p/N;
-					break;
-				case NO_CORRECTION_BOUNDED:
-				case NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-					{
-						p = (double)p / N;
-						double min = k;
-						if(p < min)
-							p = min;
-						else if(p > 1.0 - min)
-							p = 1.0 - min;
-					}break;
-					
-					case LAPLACE_CORRECTION:
-					case LAPLACE_CORRECTION_EXACT_DISTRIBUTION:						
-						p = (p + k) / (N + 2.0*k);
-						break;
-
-					case EXACT_CORRECTION:
-					case EXACT_CORRECTION_EXACT_DISTRIBUTION:
-					case DIVERSITY_CORRECTION:
-					case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION:
-					{
-						p = p / N;
-						double c = sqrt(1.0 - 4.0 * p * (1.0 - p) * n);
-						double q;
-						if(p < p1)
-							q = 0.5 - c / 2.0;
-						else if(p > p2)
-							q = 0.5 + c / 2.0;
-						else 
-							q = 0.5;
-						p = q;
-					}break;
-					case EXACT_CORRECTION_BOUNDED:
-					case EXACT_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:
-					case DIVERSITY_CORRECTION_BOUNDED:
-					case DIVERSITY_CORRECTION_EXACT_DISTRIBUTION_BOUNDED:	
-					{
-						p = p / N;
-						double c = sqrt(1.0 - 4.0 * p * (1.0 - p) * n);
-						double q;
-						if(p < p1)
-							q = 0.5 - c / 2.0;
-						else if(p > p2)
-							q = 0.5 + c / 2.0;
-						else 
-							q = 0.5;
-						double min = k;
-						if(q < min)
-							q = min;
-						else if(q > 1.0 - min)
-							q = 1.0 - min;
-						p = q;
-					}break;
-					case TEST_CORRECTION:
-						p = 0.5;
-					break;
-					default:break;
-				}
 			fprintf(f, "%f %f\n", t, p);
 		}
-		fprintf(f, "1.0 1.0\n");		
+
 		fclose(f);
 	}
 
@@ -512,29 +303,26 @@ void Test::printDistributionCorrection(std::string basename, std::string title, 
 		fprintf(stderr, "Cannot open graph_correction/%s\n", ("t" + data_file_name).c_str());	
 	else
 	{
-		for(int z = 0; z <= 1000; z++)
-			fprintf(f, "%f %f\n", (double)z/1000.0, (double)z/1000.0);
+		for(int z = 0; z <= 100; z++)
+			fprintf(f, "%f %f\n", (double)z/100.0, (double)z/100.0);
 		fclose(f);
 	}
 
-	if ((f = fopen(gnuplot_file_name.c_str(), "w")) == NULL)
+	if ((f = fopen(("graph_correction/" + gnuplot_file_name).c_str(), "w")) == NULL)
 		fprintf(stderr, "Cannot open %s\n", gnuplot_file_name.c_str());	
 	else
 	{
 		fprintf(f, "set style line 2 lt 2 lw 1\n");
 		fprintf(f, "set style line 1 lt 1 lw 3\n");
 		fprintf(f, "set xrange [0.0:1.0]\n");
-		fprintf(f, "set yrange [0.0:1.0]\n");		
+		fprintf(f, "set yrange [0.0:1.0]\n");
 		fprintf(f, "set size ratio 1\n");
 		
-		fprintf(f, "set xlabel 'p'\nset ylabel 'q'\nset terminal png size 400,400\nset key right bottom\n");
-		fprintf(f, "set output \"graph_correction/%s.png\"\n", real_basename.c_str());
-		fprintf(f, "set title '%s (PopSize: %i", title.c_str(), parameter.popSize);
-//		if((correction_type == LAPLACE_CORRECTION) || (correction_type == LAPLACE_CORRECTION_EXACT_DISTRIBUTION))
-//			fprintf(f, ", alpha = %2f", k);
-		fprintf(f, ")'\n");
-		fprintf(f, "plot \"graph_correction/%s.gnp\" ti \"Corrected distribution\" with lines ls %i, ", real_basename.c_str(),1);
-		fprintf(f, "\"graph_correction/t%s.gnp\" ti \"No correction\" with lines ls %i\n", real_basename.c_str(),2);
+		fprintf(f, "set xlabel 'p'\nset ylabel 'q'\n");
+		fprintf(f, "set terminal png size 400,400\nset key right bottom\n");
+		fprintf(f, "set output \"%s.png\"\n", real_basename.c_str());
+		fprintf(f, "plot \"%s.gnp\" ti \"Corrected distribution\" with lines ls %i, ", real_basename.c_str(),1);
+		fprintf(f, "\"t%s.gnp\" ti \"No correction\" with lines ls %i\n", real_basename.c_str(),2);
 		fprintf(f, "\n");
 	} 
 	fclose(f);

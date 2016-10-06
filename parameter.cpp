@@ -4,27 +4,80 @@
 #include <math.h>
 #include <stdio.h>
 
-std::string Parameter::correctionString[MAX_CORRECTION_TYPES] = {
-	"NoC",
-	"NoC+bd",
-	"NoC+ERD",
-	"NoC+ERD+bd",	
-	"EDC",
-	"EDC+bd",
-	"EDC+ERD",
-	"EDC+ERD+bd",
-	"LC",	
-	"LC+ERD",
-	"LRC",
-	"LRC+bd",	
-	"LRC+ERD",	
-	"LRC+ERD+bd",		
-	"CD",
-	"CD+bd",
-	"CD+ERD",
-	"CD+ERD+bd",
-	"(1-1/N) loss"
+std::string Parameter::problemBaseName[MAX_PROBLEM_TYPES] = {
+	"graph_flat",
+	"graph_haystack",
+	"graph_onemax",
+	"graph_onemax_two",
+	"graph_leading",
+	"graph_schaffer",
+	"graph_plateau",
+	"graph_nk",
+	"graph_packing"
 };
+
+std::string Parameter::problemDescription[MAX_PROBLEM_TYPES] = {
+	"Flat fitness landscape",
+	"Needle in a Haystack",
+	"OneMax",
+	"OneMax Two Peaks",
+	"Leading 1s",
+	"Schaffer F6 function",
+	"Plateau function",
+	"NK problem",
+	"Packing problem"
+};
+
+std::string Parameter::correctionString[MAX_CORRECTION_TYPES] = {
+	"RD+NoC",
+	"RD+BC",
+	"ED+NoC",
+	"ED+BC",
+	
+	"RD+LC",
+	"ED+LC",
+	
+	"RD+LRC",
+	"RD+LRC+BC",
+	"ED+LRC",	
+	"ED+LRC+BC",
+	
+	"RDC",
+	"RDC+BC",
+	"EDC",
+	"EDC+BC",
+	
+	"EDC+LRC+BC",
+	
+	"(1-1/N) loss",
+	"(M*(N-1)/(N*(M-1)) loss"
+};
+
+std::string Parameter::correctionBaseName[MAX_CORRECTION_TYPES] = {
+	"no",
+	"boundary",
+	"exact_no",
+	"exact_boundary",
+	
+	"laplace",
+	"exact_laplace",
+	
+	"laplace_remember",
+	"laplace_remember_boundary",
+	"exact_laplace_remember",
+	"exact_laplace_remember_boundary",
+	
+	"random_distribution",
+	"random_distribution_boundary",
+	"exact_distribution",
+	"exact_distribution_boundary",
+	
+	"edc_lrc_boundary",
+	
+	"standard_loss_no"
+};
+
+
 
 bool Parameter::test_bool(bool& value, bool set, bool change)
 {
@@ -43,9 +96,12 @@ bool Parameter::test_double(double& value, double min, double max, int steps)
 	if(steps > 1)
 	{
 		value += (max - min) / (double)(steps-1);
-		if(value <= max)
+		if((int)(value * 10000) > (int)(max * 10000))
+		{
+			value = min;
+		}
+		else 
 			return true;
-		else value = min;
 	}
 	return false;
 }
@@ -96,39 +152,81 @@ const bool Parameter::isStartConfiguration() const
 			currentCorrection == 0 );
 }
 
+bool Parameter::isNoCorrection(eCorrectionType correction_type)
+{
+	return((correction_type == NO_CORRECTION_RANDOM_DISTRIBUTION) ||
+		   (correction_type == NO_CORRECTION_EXACT_DISTRIBUTION) ||
+		   (correction_type == NO_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION));
+}
+
 bool Parameter::isLaplace(eCorrectionType correction_type)
 {
-	return((correction_type == LAPLACE_CORRECTION) ||
+	return((correction_type == LAPLACE_CORRECTION_RANDOM_DISTRIBUTION) ||
 		   (correction_type == LAPLACE_CORRECTION_EXACT_DISTRIBUTION) ||
-		   (correction_type == LAPLACE_REMEMBER_CORRECTION) ||
-		   (correction_type == LAPLACE_REMEMBER_CORRECTION_BOUNDED) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION) ||
 		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION) ||
-		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED));
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == EDC_LRC_BC));
 }
 
-bool Parameter::isBounded(eCorrectionType correction_type)
+bool Parameter::isLaplaceRemember(eCorrectionType correction_type)
 {
-	return((correction_type == NO_CORRECTION_BOUNDED) ||
-		(correction_type ==	NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDED) ||
-		(correction_type ==	EXACT_CORRECTION_BOUNDED) ||
-		(correction_type ==	EXACT_CORRECTION_EXACT_DISTRIBUTION_BOUNDED) ||
-		(correction_type ==	LAPLACE_REMEMBER_CORRECTION_BOUNDED) ||
-		(correction_type ==	LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED) ||
-		(correction_type ==	DIVERSITY_CORRECTION_BOUNDED) ||
-		(correction_type ==	DIVERSITY_CORRECTION_EXACT_DISTRIBUTION_BOUNDED));
+	return((correction_type == LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == EDC_LRC_BC));
 }
 
+bool Parameter::isExactDistribution(eCorrectionType correction_type)
+{
+	return((correction_type == NO_CORRECTION_EXACT_DISTRIBUTION) ||
+		   (correction_type == NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == LAPLACE_CORRECTION_EXACT_DISTRIBUTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == EDC_LRC_BC));
+}
+
+bool Parameter::isBoundaryCorrection(eCorrectionType correction_type)
+{
+	return((correction_type == NO_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION) ||
+		
+		   (correction_type == RANDOM_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
+		   
+		   (correction_type == EDC_LRC_BC));
+}
+
+bool Parameter::isDistributionCorrection(eCorrectionType correction_type)
+{
+	return((correction_type == RANDOM_DISTRIBUTION_CORRECTION) ||
+		   (correction_type == RANDOM_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||	
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION) ||
+		   (correction_type == EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION) ||
+		   (correction_type == EDC_LRC_BC));
+}
 
 
 std::string Parameter::print() const
 {
 	std::ostringstream os;
-	os << "Runs: " << testRuns << " Size:" << popSize << " Generations:" << maxGenerations << " Length:" << maxLength << " Selection:" << selection << " Correction: " << correctionString[correction[currentCorrection]];
+	os << "Runs: " << testRuns << " Size:" << popSize << " Generations:" << maxGenerations << " Length:" << maxLength << " Selection:" << (int)((double)popSize * selection) << " Correction: " << correctionString[correction[currentCorrection]];
 	if((problemType == ONEMAX_TWO_PEAKS_PROBLEM) || (problemType == NK_PROBLEM))
 		os << " k:" << k;
+//	if(problemType == PACKING_PROBLEM)
+//		os << " max_size:" << Packing_Individual::maxPackingSize;
 	if(isLaplace(correction[currentCorrection]))
 		os << " alpha:" << laplace_alpha;
-	if(isBounded(correction[currentCorrection]))
+	if(isBoundaryCorrection(correction[currentCorrection]))
 		os << " beta:" << bounded_beta;
 	return os.str();
 }
@@ -140,7 +238,7 @@ void Parameter::createNextParameter()
 		currentCorrection = 0;
 	if(isLaplace(correction[currentCorrection]))
 		test_double(laplace_alpha, minlaplace_alpha, maxlaplace_alpha, laplace_alphaSteps);
-	if(isBounded(correction[currentCorrection]))
+	if(isBoundaryCorrection(correction[currentCorrection]))
 		test_double(bounded_beta, minbounded_beta, maxbounded_beta, bounded_betaSteps);
 	test_double(selection, minselection, maxselection, selectionSteps);
 	
@@ -241,6 +339,7 @@ void Parameter::setRandomOneMax(bool set, bool change)
 
 void Parameter::testCorrectionType(eCorrectionType set)
 {
+	for(int i = 0; i < selectionSteps; i++)
 	if(isLaplace(set))
 	{
 		for(int i = 0; i < laplace_alphaSteps; i++)
@@ -248,22 +347,18 @@ void Parameter::testCorrectionType(eCorrectionType set)
 			correction[correctionCount] = set;						
 			correctionCount++;
 		}
-	} else if(isBounded(set))
+	} else if(isBoundaryCorrection(set))
 	{
 		for(int i = 0; i < bounded_betaSteps; i++)
 		{
 			correction[correctionCount] = set;						
 			correctionCount++;
 		}		
-	}
-	else
-	{
-		for(int i = 0; i < selectionSteps; i++)
+	} else
 		{
 			correction[correctionCount] = set;	
 			correctionCount++;
 		}
-	}
 }
 
 int Parameter::getCorrectionTypeCount() const

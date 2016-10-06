@@ -5,8 +5,8 @@ CPP  = g++.exe
 CC   = gcc.exe
 WINDRES = windres.exe
 RES  = 
-OBJ  = test.o eda9.o haystack_individual.o individual.o onemax2_individual.o onemax_individual.o parameter.o result.o flat_individual.o leading_individual.o schaffer_individual.o plateau_individual.o nk.o nk_individual.o $(RES)
-LINKOBJ  = test.o eda9.o haystack_individual.o individual.o onemax2_individual.o onemax_individual.o parameter.o result.o flat_individual.o leading_individual.o schaffer_individual.o plateau_individual.o nk.o nk_individual.o $(RES)
+OBJ  = test.o eda9.o haystack_individual.o individual.o onemax2_individual.o onemax_individual.o parameter.o result.o flat_individual.o leading_individual.o schaffer_individual.o plateau_individual.o nk.o nk_individual.o packing_individual.o $(RES)
+LINKOBJ  = test.o eda9.o haystack_individual.o individual.o onemax2_individual.o onemax_individual.o parameter.o result.o flat_individual.o leading_individual.o schaffer_individual.o plateau_individual.o nk.o nk_individual.o packing_individual.o $(RES)
 LIBS =  -L"C:/Dev-Cpp/lib"  
 INCS =  -I"C:/Dev-Cpp/include" 
 CXXINCS =  -I"C:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"C:/Dev-Cpp/include/c++/3.4.2/backward"  -I"C:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"C:/Dev-Cpp/include/c++/3.4.2"  -I"C:/Dev-Cpp/include" 
@@ -67,3 +67,6 @@ nk.o: nk.c
 
 nk_individual.o: nk_individual.cpp
 	$(CPP) -c nk_individual.cpp -o nk_individual.o $(CXXFLAGS)
+
+packing_individual.o: packing_individual.cpp
+	$(CPP) -c packing_individual.cpp -o packing_individual.o $(CXXFLAGS)

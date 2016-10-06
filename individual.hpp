@@ -22,7 +22,8 @@ class Individual
 		static int maxLength;
 // k is parameter for onemax2
 		static int k;
-		static int run;
+		static int currentRunNumber;
+		static int* currentGoalString;
 		
 		int* bitstring;
 		static int* goalString;

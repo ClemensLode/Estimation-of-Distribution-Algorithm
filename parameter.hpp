@@ -22,35 +22,36 @@ enum eProblemType
 	
 	NK_PROBLEM,
 	
-	PROBLEM_COUNT
+	PACKING_PROBLEM,
+	
+	MAX_PROBLEM_TYPES
 };
 
 enum eCorrectionType
 {
-	NO_CORRECTION = 0,
-	NO_CORRECTION_BOUNDED,
+	NO_CORRECTION_RANDOM_DISTRIBUTION = 0,
+	NO_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION,
 	NO_CORRECTION_EXACT_DISTRIBUTION,
-	NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDED,
+	NO_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION,
 
-	EXACT_CORRECTION,
-	EXACT_CORRECTION_BOUNDED,
-	EXACT_CORRECTION_EXACT_DISTRIBUTION,
-	EXACT_CORRECTION_EXACT_DISTRIBUTION_BOUNDED,	
-
-	LAPLACE_CORRECTION,
+	LAPLACE_CORRECTION_RANDOM_DISTRIBUTION,
 	LAPLACE_CORRECTION_EXACT_DISTRIBUTION,
 
-	LAPLACE_REMEMBER_CORRECTION,
-	LAPLACE_REMEMBER_CORRECTION_BOUNDED,
+	LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION,
+	LAPLACE_REMEMBER_CORRECTION_RANDOM_DISTRIBUTION_BOUNDARY_CORRECTION,
 	LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION,
-	LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDED,			
-	
-	DIVERSITY_CORRECTION,
-	DIVERSITY_CORRECTION_BOUNDED,
-	DIVERSITY_CORRECTION_EXACT_DISTRIBUTION,
-	DIVERSITY_CORRECTION_EXACT_DISTRIBUTION_BOUNDED,
+	LAPLACE_REMEMBER_CORRECTION_EXACT_DISTRIBUTION_BOUNDARY_CORRECTION,
 
+	RANDOM_DISTRIBUTION_CORRECTION,	
+	RANDOM_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION,
+	EXACT_DISTRIBUTION_CORRECTION,	
+	EXACT_DISTRIBUTION_CORRECTION_BOUNDARY_CORRECTION,
+	
+	EDC_LRC_BC,
+	
 	TEST_CORRECTION, // just a reduction of variance by 1 - 1/n to compare
+	EXACT_TEST_CORRECTION, // reduction of variance by M*(N-1) / (N * (M-1))
+	
 	MAX_CORRECTION_TYPES
 	// bounded: set p = 1/N if p < 1/N and p = 1 - 1/N if p > 1 - 1/N
 };
@@ -69,9 +70,17 @@ class Parameter
 		static bool test_double(double& value, double min, double max, int steps);
 		static bool test_bool(bool& value, bool set, bool change);
 
+		static std::string correctionBaseName[MAX_CORRECTION_TYPES];
 		static std::string correctionString[MAX_CORRECTION_TYPES];
+		static std::string problemDescription[MAX_PROBLEM_TYPES];
+		static std::string problemBaseName[MAX_PROBLEM_TYPES];	
+			
+		static bool isNoCorrection(eCorrectionType correction_type);
 		static bool isLaplace(eCorrectionType correction_type);
-		static bool isBounded(eCorrectionType correction_type);		
+		static bool isLaplaceRemember(eCorrectionType correction_type);
+		static bool isBoundaryCorrection(eCorrectionType correction_type);
+		static bool isExactDistribution(eCorrectionType correction_type);
+		static bool isDistributionCorrection(eCorrectionType correction_type);
 		eProblemType problemType;
 
 // number of similar test runs, 24 in order to fit on a standard windows terminal

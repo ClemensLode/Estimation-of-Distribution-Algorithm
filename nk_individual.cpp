@@ -17,7 +17,7 @@ int NK_Individual::calculateIndividualFitness()
 {
 	if(fitness == -1)
 	{
-		fitness = (int)(1000.0f * evalString(bitstring, run));
+		fitness = (int)(1000.0f * evalString(bitstring, Individual::currentRunNumber));
 //		printf("%i\n", fitness);		
 	}
 	return(fitness);	

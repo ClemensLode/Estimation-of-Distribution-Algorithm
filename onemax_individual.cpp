@@ -16,7 +16,7 @@ int OneMax_Individual::calculateIndividualFitness()
 	{
 		fitness = 0;
 		for(int i = 0; i < maxLength; i++)
-			if(bitstring[i] == goalString[i])
+			if(bitstring[i] == currentGoalString[i])
 				fitness++;
 	}
 	return(fitness);	

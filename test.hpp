@@ -11,6 +11,7 @@
 #include "schaffer_individual.hpp"
 #include "plateau_individual.hpp"
 #include "nk_individual.hpp"
+#include "packing_individual.hpp"
 
 class Test
 {
@@ -20,15 +21,22 @@ class Test
 		void run();
 		double* getFitnessResults() const;
 		double* getDiversityResults() const;
-		void printDistributionCorrection(std::string basename, std::string title, eCorrectionType correction_type, double k);
+		void printDistributionCorrection(eCorrectionType correction_type);
+		
+		double boundaryCorrection(double p);
+		double distributionCorrection(double p, double p1, double p2, double n);
+// Both Laplace correction methods need the raw number of '1's of the selected population as parameter
+		double laplaceCorrection(double k);
+		double laplaceRememberCorrection(double oldp, double k);
+		double laplaceRememberDistributionCorrection(double oldp, double k);
 	private:
 		Parameter parameter;
 		double* fitnessResults;
 		double* diversityResults;
 
 // Number of best individuals to select to create the distribution
-		double N;
-		void init_values(eCorrectionType correction_type, double &p1, double &p2, double &n, double* oldp, bool &calc_p12, bool &use_exact_distribution);
+		int N;
+		void init_values(eCorrectionType correction_type, double &p1, double &p2, double &n, bool &use_exact_distribution);
 };
 
 #endif

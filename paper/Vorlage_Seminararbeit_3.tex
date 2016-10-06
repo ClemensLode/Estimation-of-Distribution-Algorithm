@@ -1,0 +1,166 @@
+\documentclass[12pt, a4paper]{scrartcl}
+
+\usepackage[ngerman]{babel}
+
+%\usepackage[ansinew]{inputenc}
+\usepackage[latin1]{inputenc}
+
+\usepackage[T1]{fontenc}
+
+\usepackage{graphicx}
+
+\usepackage{fancyhdr}
+
+\usepackage{url}
+%\usepackage{hyperref}
+
+\pagestyle{headings}
+
+
+
+\begin{document}
+
+%
+% Deckblatt
+%
+\thispagestyle{empty}
+\noindent
+\begin{tabular}{ll}
+  \hspace{-2mm}%
+  \parbox[b]{0.88\textwidth}
+  {
+    \flushleft
+    Institut für Angewandte Informatik\\
+    und Formale Beschreibungsverfahren\\
+    Universität Karlsruhe (TH)\\
+    \vspace{1em}
+
+    Forschungsgruppe Effiziente Algorithmen\\
+    Prof. Dr. Hartmut Schmeck\\
+  } & 
+\includegraphics[height=7em]{AIFB_Logo_senkrecht1}\\
+
+\end{tabular}
+
+\vspace{3cm}
+
+\noindent
+Seminar "`Lernende Systeme"', Sommersemester 2006
+
+\vspace{3cm}
+
+\noindent
+{\Large\textbf{Titel der Arbeit}}
+
+\vspace{3cm}
+
+\noindent
+\begin{tabular}{ll}
+Autor:	  &Vorname Nachname\\
+Betreuer:	&Vorname Nachname
+\end{tabular}
+%
+% Ende Deckblatt
+%
+\newpage
+
+%
+% Inhalts-, Abbildungs-, Tabellenverzeichnis
+%
+\tableofcontents
+%\listoffigures
+%\listoftables
+\newpage
+
+%
+% Die Seminarausarbeitung
+%
+\section{Der erste Abschnitt}
+
+Ich bin von Beruf Dachdecker. Am Tag des Unfalles arbeitete ich allein
+auf dem Dach eines sechsstöckigen Neubaus. Als ich mit meiner Arbeit
+fertig war, hatte ich etwa 250kg Ziegel übrig. 
+
+\subsection{Ein Unterabschnitt}
+
+Da ich sie nicht alle die Treppe hinunter tragen wollte, entschied ich
+mich dafür, sie in einer Tonne an der Außenseite des Gebäudes
+hinunterzulassen, die an einem Seil befestigt war, das über eine Rolle
+lief.
+
+\begin{figure}[htbp]
+  \center
+  \includegraphics[height=7em]{AIFB_Logo_senkrecht1}
+  \caption{Eine Abbildung.}
+  \label{fig_1} 
+\end{figure}
+
+Ich band also das Seil unten auf der Erde fest, ging auf das Dach und
+belud die Tonne. Dann ging ich wieder nach unten und band das Seil
+los. Ich hielt es fest, um die 250kg Ziegel\footnote{Eine
+  Fußnote. Oder so \ldots} langsam herunterzulassen. Wenn Sie in
+Frage~11 des Unfallbericht-Formulars nachlesen, werden Sie
+feststellen, dass mein damaliges Körpergewicht etwa 75kg betrug. 
+
+\subsubsection{Ein Unterunterabschnitt}
+
+Da ich sehr überrascht war, als ich plötzlich den Boden unter den
+Füssen verlor und aufwärts gezogen wurde, verlor ich meine
+Geistesgegenwart und vergaß das Seil loszulassen. Ich glaube ich muss
+hier nicht sagen, dass ich mit immer größerer Geschwindigkeit am
+Gebäude hinauf gezogen wurde. Man vergleiche hierzu auch
+Abbildung~\ref{fig_1} auf Seite~\pageref{fig_1}. 
+
+\section{Der zweite Abschnitt}
+
+Ich bin von Beruf Dachdecker. Am Tag des Unfalles arbeitete ich allein
+auf dem Dach eines sechsstöckigen Neubaus. Als ich mit meiner Arbeit
+fertig war, hatte ich etwa 250kg Ziegel übrig. Da ich sie nicht alle
+die Treppe hinunter tragen wollte, entschied ich mich dafür, sie in
+einer Tonne an der Außenseite des Gebäudes hinunterzulassen, die an
+einem Seil befestigt war, das über eine Rolle lief. Ich band also das
+Seil unten auf der Erde fest, ging auf das Dach und belud die
+Tonne. Dann ging ich wieder nach unten und band das Seil los. Ich
+hielt es fest, um die 250kg Ziegel langsam herunterzulassen. Wenn Sie
+in Frage 11 des Unfallbericht-Formulars nachlesen, werden Sie
+feststellen, dass mein damaliges Körpergewicht etwa 75kg betrug. 
+
+Da ich sehr überrascht war, als ich plötzlich den Boden unter den
+Füssen verlor und aufwärts gezogen wurde, verlor ich meine
+Geistesgegenwart und vergaß das Seil loszulassen. Ich glaube ich muss
+hier nicht sagen, dass ich mit immer größerer Geschwindigkeit am
+Gebäude hinauf gezogen wurde. 
+
+Im Krankenhaus hatte ich Zeit, ein gutes Buch \cite{GKP94}, einen
+Zeitschriftenartikel \cite{BW03} und eine Konferenzveröffentlichung
+\cite{FN02} zu lesen. Zudem stieß ich auf eine spannende Internetseite
+\cite{ips}. 
+
+
+%
+% Literaturverzeichnis
+% alternativ: BibTeX verwenden!
+%
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+
+\begin{thebibliography}{[XX]}
+
+\bibitem[1]{GKP94}  Graham R.\ L.; Knuth, D.\ E.; Patashnik,
+  O.: \emph{Concrete Mathematics}. Addison-Wesley, 2. Auflage, 1994.
+
+\bibitem[2]{BW03}  Bollig, B.; Wegener, I.: \emph{Functions that have
+    read-once branching programs of quadratic size are not necessarily
+    testable}. Information Processing Letters, Heftnummer 87, Seiten
+  25--29, 2003. 
+
+\bibitem[3]{FN02}  Fischer, E.; Newman, I.: \emph{Functions that have
+    read-twice constant width branching programs are not necessarily
+    testable}. In: \emph{Proceedings of the 17th Conference on
+    Computational Complexity}, Seiten 73--79, 2002. 
+
+\bibitem[4]{ips}   Lorem-Ipsum-Generator,
+  \url{http://www.loremipsum.de}, Stand: 1.~Dezember~2005 
+
+\end{thebibliography}
+	
+\end{document}

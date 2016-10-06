@@ -1,0 +1,113 @@
+\documentclass[12pt]{report}
+
+\usepackage[ansinew]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{a4, epsfig, fancyhdr}
+
+\headheight = 15pt
+\pagestyle{fancy}
+\fancyhf{}
+\chead{\sl\nouppercase\leftmark}
+\cfoot{\thepage}
+
+
+\begin{document}
+
+%
+% Deckblatt
+%
+\thispagestyle{empty}
+\noindent
+
+\begin{figure}[htbp]
+  \begin{minipage}{0.6\textwidth}
+  \raggedright
+  	Institut für Angewandte Informatik\\
+		und Formale Beschreibungsverfahren\\
+		Universität Karlsruhe (TH)\\
+		\vspace{1em}
+		Forschungsgruppe Effiziente Algorithmen\\
+		Prof. Dr. Hartmut Schmeck
+  \end{minipage}\hfill
+  \begin{minipage}{0.3\textwidth}
+  	\raggedleft
+  	\epsfig{file=AIFB_Logo_senkrecht1.eps, height=7em}
+   \end{minipage}
+\end{figure}
+
+\vspace{3cm}
+
+\noindent
+Seminar "`Schwarmintelligenz"', Wintersemester 2005/06
+
+\vspace{3cm}
+
+\noindent
+{\Large\textbf{Titel der Arbeit}}
+
+\vspace{3cm}
+
+\noindent
+\begin{tabular}{ll}
+Autor:	  &Vorname Nachname\\
+Betreuer:	&Vorname Nachname
+\end{tabular}
+
+%
+% Inhalts-, Abbildungs-, Tabellenverzeichnis
+%
+\tableofcontents
+%\listoffigures
+%\listoftables
+
+
+%
+% Die Seminarausarbeitung
+%
+\chapter{Das erste Kapitel}
+Ich bin von Beruf Dachdecker. Am Tag des Unfalles arbeitete ich allein auf dem Dach eines sechsstöckigen Neubaus. Als ich mit meiner Arbeit fertig war, hatte ich etwa 250kg Ziegel übrig.
+
+\section{Ein Abschnitt}
+
+Da ich sie nicht alle die Treppe hinunter tragen wollte, entschied ich mich dafür, sie in einer Tonne an der Außenseite des Gebäudes hinunterzulassen, die an einem Seil befestigt war, das über eine Rolle lief.
+
+\begin{figure}[htbp]
+	\center
+  \epsfig{file=AIFB_Logo_senkrecht1.eps, width=1.2cm}
+  \caption{\label{fig_1} Eine Abbildung.}
+\end{figure}
+
+Ich band also das Seil unten auf der Erde fest, ging auf das Dach und belud die Tonne. Dann ging ich wieder nach unten und band das Seil los. Ich hielt es fest, um die 250kg Ziegel\footnote{Eine Fußnote. Oder so \ldots} langsam herunterzulassen. Wenn Sie in Frage~11 des Unfallbericht-Formulars nachlesen, werden Sie feststellen, dass mein damaliges Körpergewicht etwa 75kg betrug.
+
+\subsection{Ein Unterabschnitt}
+
+Da ich sehr überrascht war, als ich plötzlich den Boden unter den Füssen verlor und aufwärts gezogen wurde, verlor ich meine Geistesgegenwart und vergaß das Seil loszulassen. Ich glaube ich muss hier nicht sagen, dass ich mit immer größerer Geschwindigkeit am Gebäude hinauf gezogen wurde. Man vergleiche hierzu auch Abbildung~\ref{fig_1} auf Seite~\pageref{fig_1}.
+
+\chapter{Das zweite Kapitel}
+
+Ich bin von Beruf Dachdecker. Am Tag des Unfalles arbeitete ich allein auf dem Dach eines sechsstöckigen Neubaus. Als ich mit meiner Arbeit fertig war, hatte ich etwa 250kg Ziegel übrig. Da ich sie nicht alle die Treppe hinunter tragen wollte, ent-schied ich mich dafür, sie in einer Tonne an der Außenseite des Gebäudes hinunterzu-lassen, die an einem Seil befestigt war, das über eine Rolle lief. Ich band also das Seil unten auf der Erde fest, ging auf das Dach und belud die Tonne. Dann ging ich wieder nach unten und band das Seil los. Ich hielt es fest, um die 250kg Ziegel lang-sam herunterzulassen. Wenn Sie in Frage 11 des Unfallbericht-Formulars nachlesen, werden Sie feststellen, dass mein damaliges Körpergewicht etwa 75kg betrug.
+
+Da ich sehr überrascht war, als ich plötzlich den Boden unter den Füssen verlor und aufwärts gezogen wurde, verlor ich meine Geistesgegenwart und vergaß das Seil loszulassen. Ich glaube ich muss hier nicht sagen, dass ich mit immer größerer Ge-schwindigkeit am Gebäude hinauf gezogen wurde.
+
+Im Krankenhaus hatte ich Zeit, ein gutes Buch \cite{GKP94}, einen Zeitschriftenartikel \cite{BW03} und eine Konferenzveröffentlichung \cite{FN02} zu lesen. Zudem stieß ich auf eine spannende Internetseite \cite{ips}.
+
+
+%
+% Literaturverzeichnis
+% alternativ: BibTeX verwenden!
+%
+\addcontentsline{toc}{chapter}{Literaturverzeichnis}
+
+\begin{thebibliography}{[XX]}
+	\bibitem[1]{GKP94}  Graham R.\ L.; Knuth, D.\ E.; Patashnik, O.: \emph{Concrete Mathematics}. 
+											Addison-Wesley, 2. Auflage, 1994.
+	\bibitem[2]{BW03}  Bollig, B.; Wegener, I.: \emph{Functions that have read-once branching programs 
+										 of quadratic size are not necessarily testable}. Information Processing Letters, 
+										 Heftnummer 87, Seiten 25--29, 2003.
+	\bibitem[3]{FN02}  Fischer, E.; Newman, I.: \emph{Functions that have read-twice constant width 
+										 branching programs are not necessarily testable}. In: \emph{Proceedings of the 17th Conference on 	
+										 Computational Complexity}, Seiten 73--79, 2002.
+	\bibitem[4]{ips}   Lorem-Ipsum-Generator, \texttt{http://www.loremipsum.de}, Stand: 1. Dez. 2005
+\end{thebibliography}
+	
+\end{document}

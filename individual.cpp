@@ -6,7 +6,9 @@
 
 int Individual::maxLength = 0;
 int Individual::k = 0;
-int Individual::run = 0;
+int Individual::currentRunNumber = 0;
+int* Individual::goalString = NULL;
+int* Individual::currentGoalString = NULL;
 
 Individual::Individual():
 	fitness(-1),
@@ -25,8 +27,6 @@ void Individual::createOnEstimatedDistribution(double* p)
 		bitstring[i] = rand() < RAND_MAX*p[i] ? 1 : 0;
 }
 
-int* Individual::goalString = 0;
-
 void Individual::printIndividualFitnessLandscape(std::string basename, std::string title, std::string xlabel, double* fitness_array, int fitness_entries)
 {
 // Die besten Fitnesswerte aller Generationen aller Durchlaeufe sichern ok
@@ -36,7 +36,7 @@ void Individual::printIndividualFitnessLandscape(std::string basename, std::stri
 	std::string real_basename = "graph_" + basename + "_fitness_landscape";
 	std::string data_file_name = real_basename + ".gnp";
 	std::string gnuplot_file_name = real_basename + ".plt";
-	if ((f = fopen(data_file_name.c_str(), "w")) == NULL)
+	if ((f = fopen(("graph_correction/" + data_file_name).c_str(), "w")) == NULL)
 		fprintf(stderr, "Cannot open %s\n", "output_file");
 	else
 	{
@@ -46,14 +46,14 @@ void Individual::printIndividualFitnessLandscape(std::string basename, std::stri
 		}
 		fclose(f);
 	}
-	if ((f = fopen(gnuplot_file_name.c_str(), "w")) == NULL)
+	if ((f = fopen(("graph_correction/" + gnuplot_file_name).c_str(), "w")) == NULL)
 		fprintf(stderr, "Cannot open %s\n", "output_file");
 	else
 	{
 		fprintf(f, "set style line 1 lt 1 lw 3\n");
 		fprintf(f, "set xlabel '%s'\nset ylabel 'fitness'\nset terminal png size 500,350\nset key right bottom\n", xlabel.c_str());
-		fprintf(f, "set output \"%s.png\"\n", real_basename.c_str());
-		fprintf(f, "set title '%s'\n", title.c_str());
+		fprintf(f, "set output \"graph_correction/%s.png\"\n", real_basename.c_str());
+//		fprintf(f, "set title '%s'\n", title.c_str());
 		fprintf(f, "plot ");
 		fprintf(f, "\"%s.gnp\" ti \"fitness graph\" with lines ls %i", real_basename.c_str(),1);
 //							fprintf(f, ", ");
